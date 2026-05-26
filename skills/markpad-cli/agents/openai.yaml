@@ -1,0 +1,4 @@
+interface:
+  display_name: "markpad CLI"
+  short_description: "Run and maintain the Markdown editor/reader/translator CLI"
+  default_prompt: "Use $markpad-cli to run, debug, or extend the local Markdown editor/reader/translator."

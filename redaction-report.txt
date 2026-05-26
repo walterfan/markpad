@@ -1,0 +1,40 @@
+# Redaction report (APPLIED)
+# Files with matches: 2
+# Total matches: 31
+# Counts by rule:
+#   zoom_gitlab: 1
+#   zoom_internal_hosts: 30
+
+# Format: path:line:rule	original -> replacement
+
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:13:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:26:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:39:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:52:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:65:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:78:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:91:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:118:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:127:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:133:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:147:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:157:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:175:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:197:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:203:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:212:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:218:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:224:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:233:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:255:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:261:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:276:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:285:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:301:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:313:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:322:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:331:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:344:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:359:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/.opencode/package-lock.json:374:zoom_internal_hosts	artifacts.corp.zoom.us -> [REDACTED_INTERNAL_HOST]
+/Users/walterfan/workspace/walter/markpad/skills/markpad-cli/SKILL.md:5:zoom_gitlab	git.zoom.us -> [REDACTED_INTERNAL_HOST]

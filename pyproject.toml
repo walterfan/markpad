@@ -1,0 +1,42 @@
+[project]
+name = "markpad"
+version = "1.0.0"
+description = "Local Markdown editor/reader/translator with indexing, live editing, preview, and diagram rendering."
+authors = [{ name = "Walter Fan" }]
+readme = "README.md"
+requires-python = ">=3.11,<4.0"
+dependencies = [
+    "bleach>=6.2.0,<7.0.0",
+    "click>=8.1.0,<9.0.0",
+    "fastapi>=0.115.0,<1.0.0",
+    "markdown-it-py>=3.0.0,<5.0.0",
+    "pydantic>=2.10.0,<3.0.0",
+    "uvicorn>=0.32.0,<1.0.0",
+    "watchfiles>=1.0.0,<2.0.0",
+    "websockets>=14.0,<16.0",
+    "httpx (>=0.28.1,<0.29.0)",
+]
+
+[project.scripts]
+markpad = "markpad.cli:main"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+packages = [{ include = "markpad", from = "src" }]
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=8.3.0,<9.0.0"
+ruff = ">=0.8.0,<1.0.0"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
