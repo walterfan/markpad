@@ -1,13 +1,17 @@
 const state = {
   files: [],
   activePath: null,
+  activeAbsolutePath: null,
   activeMtime: null,
+  selectedDirectory: "",
+  deleteTarget: null,
   filter: "",
   renderTimer: null,
   collapsedDirs: new Set(),
   sidebarHidden: false,
   editorHidden: false,
   previewHidden: false,
+  llmAvailable: false,
   theme: "paper",
 };
 
@@ -71,7 +75,13 @@ const els = {
   themeButtons: document.querySelectorAll("[data-theme]"),
   editor: document.getElementById("editor"),
   preview: document.getElementById("preview"),
+  createFile: document.getElementById("create-file"),
+  deleteFile: document.getElementById("delete-file"),
+  llmEditForm: document.getElementById("llm-edit-form"),
+  llmEditPrompt: document.getElementById("llm-edit-prompt"),
+  llmEditApply: document.getElementById("llm-edit-apply"),
   save: document.getElementById("save"),
+  shutdown: document.getElementById("shutdown"),
   translate: document.getElementById("translate"),
   editorPane: document.getElementById("editor-pane"),
   previewPane: document.getElementById("preview-pane"),
@@ -92,6 +102,56 @@ function updateStats() {
   els.totalFiles.textContent = `Files: ${total}`;
   els.charCount.textContent = `Characters: ${els.editor.value.length}`;
   els.themeStatus.textContent = `Theme: ${themes[state.theme].label}`;
+}
+
+function pathFromUrl() {
+  const directPath = decodeURIComponent(window.location.pathname).replace(/^\/+/, "");
+  if (directPath) {
+    return directPath;
+  }
+  return new URLSearchParams(window.location.search).get("path");
+}
+
+function absolutePathFromUrl() {
+  return new URLSearchParams(window.location.search).get("absolutePath");
+}
+
+function urlForPath(path) {
+  if (!path) {
+    return "/";
+  }
+  return `/${path.split("/").map(encodeURIComponent).join("/")}`;
+}
+
+function setPathInUrl(path, mode = "push") {
+  if (!window.history?.pushState) {
+    return;
+  }
+  const targetUrl = urlForPath(path);
+  const currentUrl = `${window.location.pathname}${window.location.search}`;
+  if (currentUrl === targetUrl) {
+    return;
+  }
+  const method = mode === "replace" ? "replaceState" : "pushState";
+  window.history[method]({ path }, "", targetUrl);
+}
+
+function setAbsolutePathInUrl(path, mode = "push") {
+  if (!window.history?.pushState) {
+    return;
+  }
+  const targetUrl = path ? `/?absolutePath=${encodeURIComponent(path)}` : "/";
+  const currentUrl = `${window.location.pathname}${window.location.search}`;
+  if (currentUrl === targetUrl) {
+    return;
+  }
+  const method = mode === "replace" ? "replaceState" : "pushState";
+  window.history[method]({ absolutePath: path }, "", targetUrl);
+}
+
+function isAbsolutePath(value) {
+  const trimmed = value.trim();
+  return trimmed.startsWith("/") || /^[A-Za-z]:[\\/]/.test(trimmed);
 }
 
 function loadDisplaySettings() {
@@ -145,12 +205,17 @@ function closeThemeDialog() {
 }
 
 function applyServerConfig(config) {
+  state.llmAvailable = config.translate_available;
   if (config.translate_available) {
     els.translate.disabled = false;
     els.translate.title = `Translate selected text, or all Markdown if nothing is selected, with ${config.llm_model}`;
+    updateLlmEditButtonState();
+    els.llmEditPrompt.title = `Update selected text, or all Markdown if nothing is selected, with ${config.llm_model}`;
   } else {
     els.translate.disabled = true;
     els.translate.title = "Set LLM_BASE_URL, LLM_MODEL, and LLM_API_KEY to enable translation";
+    els.llmEditApply.disabled = true;
+    els.llmEditPrompt.title = "Set LLM_BASE_URL, LLM_MODEL, and LLM_API_KEY to enable LLM editing";
   }
 }
 
@@ -289,8 +354,14 @@ function renderTreeNode(node, parent, currentPath) {
   for (const [dirName, child] of dirs) {
     const dirPath = currentPath ? `${currentPath}/${dirName}` : dirName;
     const collapsed = state.collapsedDirs.has(dirPath);
+    const folderRow = document.createElement("div");
+    folderRow.className = "tree-row";
+    folderRow.classList.toggle("selected", isDeleteTarget("folder", dirPath));
+    folderRow.appendChild(makeTargetCheckbox("folder", dirPath, `Select folder ${dirPath}`));
+
     const folderButton = document.createElement("button");
     folderButton.className = "folder-button";
+    folderButton.classList.toggle("active", state.selectedDirectory === dirPath);
     folderButton.type = "button";
     folderButton.dataset.path = dirPath;
     folderButton.innerHTML = `
@@ -298,6 +369,7 @@ function renderTreeNode(node, parent, currentPath) {
       <span>${escapeHtml(dirName)}</span>
     `;
     folderButton.addEventListener("click", () => {
+      state.selectedDirectory = dirPath;
       if (state.collapsedDirs.has(dirPath)) {
         state.collapsedDirs.delete(dirPath);
       } else {
@@ -305,7 +377,8 @@ function renderTreeNode(node, parent, currentPath) {
       }
       renderFileList();
     });
-    parent.appendChild(folderButton);
+    folderRow.appendChild(folderButton);
+    parent.appendChild(folderRow);
 
     if (!collapsed) {
       const childContainer = document.createElement("div");
@@ -316,6 +389,11 @@ function renderTreeNode(node, parent, currentPath) {
   }
 
   for (const file of files) {
+    const fileRow = document.createElement("div");
+    fileRow.className = "tree-row";
+    fileRow.classList.toggle("selected", isDeleteTarget("file", file.path));
+    fileRow.appendChild(makeTargetCheckbox("file", file.path, `Select file ${file.path}`));
+
     const button = document.createElement("button");
     button.className = `file-button ${file.path === state.activePath ? "active" : ""}`;
     button.dataset.path = file.path;
@@ -324,22 +402,148 @@ function renderTreeNode(node, parent, currentPath) {
       <span>${escapeHtml(file.name)}</span>
       <span class="file-dir">${escapeHtml(file.directory || ".")}</span>
     `;
-    button.addEventListener("click", () => openFile(file.path));
-    parent.appendChild(button);
+    button.addEventListener("click", () => {
+      state.selectedDirectory = file.directory || "";
+      openFile(file.path);
+    });
+    fileRow.appendChild(button);
+    parent.appendChild(fileRow);
   }
 }
 
-async function openFile(path) {
+function makeTargetCheckbox(type, path, label) {
+  const checkbox = document.createElement("input");
+  checkbox.className = "target-checkbox";
+  checkbox.type = "checkbox";
+  checkbox.checked = isDeleteTarget(type, path);
+  checkbox.setAttribute("aria-label", label);
+  checkbox.addEventListener("change", () => {
+    state.deleteTarget = checkbox.checked ? { type, path } : null;
+    updateDeleteButtonState();
+    renderFileList();
+  });
+  return checkbox;
+}
+
+function isDeleteTarget(type, path) {
+  return state.deleteTarget?.type === type && state.deleteTarget.path === path;
+}
+
+function updateDeleteButtonState() {
+  els.deleteFile.disabled = !state.deleteTarget;
+}
+
+function updateLlmEditButtonState() {
+  els.llmEditApply.disabled = !state.llmAvailable || !els.llmEditPrompt.value.trim();
+}
+
+async function createFile() {
+  const directory = state.selectedDirectory;
+  const directoryLabel = directory || ".";
+  const name = window.prompt(`Create Markdown file in ${directoryLabel}`, "untitled.md");
+  if (name === null) return;
+  if (!name.trim()) {
+    setStatus("File name is required");
+    return;
+  }
+
+  const created = await apiJson("/api/files", {
+    method: "POST",
+    body: JSON.stringify({ directory, name: name.trim() }),
+  });
+  await loadFiles();
+  await openFile(created.path);
+  setStatus("Created");
+}
+
+async function deleteSelectedTarget() {
+  if (!state.deleteTarget) {
+    setStatus("Select a file or folder before deleting");
+    return;
+  }
+  const { type, path } = state.deleteTarget;
+  const label = type === "folder" ? `folder "${path}" and all of its contents` : `file "${path}"`;
+  if (!window.confirm(`Delete ${label}? This cannot be undone.`)) {
+    return;
+  }
+
+  await apiJson("/api/files", {
+    method: "DELETE",
+    body: JSON.stringify({ type, path }),
+  });
+  if (activePathDeleted(type, path)) {
+    clearActiveFile();
+  }
+  state.deleteTarget = null;
+  if (
+    type === "folder" &&
+    (state.selectedDirectory === path || state.selectedDirectory.startsWith(`${path}/`))
+  ) {
+    state.selectedDirectory = "";
+  }
+  updateDeleteButtonState();
+  await loadFiles();
+  setStatus("Deleted");
+}
+
+function activePathDeleted(type, path) {
+  if (!state.activePath) return false;
+  return type === "file" ? state.activePath === path : state.activePath.startsWith(`${path}/`);
+}
+
+function clearActiveFile({ historyMode = "push" } = {}) {
+  state.activePath = null;
+  state.activeAbsolutePath = null;
+  state.activeMtime = null;
+  els.activePath.textContent = "Select a Markdown file";
+  els.editor.value = "";
+  els.preview.innerHTML = "";
+  if (historyMode) {
+    setPathInUrl(null, historyMode);
+  }
+  renderFileList();
+  updateStats();
+}
+
+async function openFile(path, { historyMode = "push" } = {}) {
   try {
     const file = await apiJson(`/api/file?path=${encodeURIComponent(path)}`);
     state.activePath = file.path;
+    state.activeAbsolutePath = null;
     state.activeMtime = file.mtime;
+    state.selectedDirectory = file.path.includes("/") ? file.path.split("/").slice(0, -1).join("/") : "";
     els.activePath.textContent = file.path;
     els.editor.value = file.content;
+    if (historyMode) {
+      setPathInUrl(file.path, historyMode);
+    }
     updateStats();
     renderFileList();
     await renderPreview();
     setStatus("Loaded");
+  } catch (error) {
+    setStatus(`Missing file: ${error.message}`);
+  }
+}
+
+async function openAbsoluteFile(path, { historyMode = "push" } = {}) {
+  try {
+    const file = await apiJson(`/api/absolute-file?path=${encodeURIComponent(path.trim())}`);
+    state.activePath = file.path;
+    state.activeAbsolutePath = file.path;
+    state.activeMtime = file.mtime;
+    state.selectedDirectory = "";
+    state.deleteTarget = null;
+    els.activePath.textContent = file.path;
+    els.editor.value = file.content;
+    if (historyMode) {
+      setAbsolutePathInUrl(file.path, historyMode);
+    }
+    updateDeleteButtonState();
+    updateStats();
+    renderFileList();
+    await renderPreview();
+    setStatus("Loaded absolute Markdown file");
   } catch (error) {
     setStatus(`Missing file: ${error.message}`);
   }
@@ -367,13 +571,53 @@ async function saveFile() {
     setStatus("Select a Markdown file before saving");
     return;
   }
-  const saved = await apiJson("/api/file", {
+  const path = state.activeAbsolutePath || state.activePath;
+  const endpoint = state.activeAbsolutePath ? "/api/absolute-file" : "/api/file";
+  const saved = await apiJson(endpoint, {
     method: "POST",
-    body: JSON.stringify({ path: state.activePath, content: els.editor.value }),
+    body: JSON.stringify({ path, content: els.editor.value }),
   });
+  state.activePath = saved.path;
+  state.activeAbsolutePath = state.activeAbsolutePath ? saved.path : null;
   state.activeMtime = saved.mtime;
   setStatus("Saved");
   await loadFiles();
+}
+
+async function shutdownServer() {
+  const confirmed = window.confirm(
+    "Shut down the markpad server? Unsaved changes will be lost and this page will stop working.",
+  );
+  if (!confirmed) {
+    return;
+  }
+  els.shutdown.disabled = true;
+  setStatus("Shutting down server...");
+  try {
+    const response = await fetch("/api/shutdown", { method: "POST" });
+    if (!response.ok) {
+      throw new Error(`Shutdown failed: HTTP ${response.status}`);
+    }
+  } catch (error) {
+    els.shutdown.disabled = false;
+    throw error;
+  }
+  renderShutdownNotice();
+}
+
+function renderShutdownNotice() {
+  setStatus("Server stopped");
+  const notice = document.createElement("div");
+  notice.style.cssText =
+    "position:fixed;inset:0;display:flex;align-items:center;justify-content:center;" +
+    "background:rgba(15,23,42,0.85);color:#f8fafc;font-size:1.125rem;z-index:9999;" +
+    "text-align:center;padding:1.5rem;";
+  notice.innerHTML =
+    "<div>" +
+    "<h2 style=\"font-size:1.5rem;font-weight:600;margin-bottom:0.5rem;\">markpad has stopped</h2>" +
+    "<p>The backend server has been shut down. You can close this tab.</p>" +
+    "</div>";
+  document.body.appendChild(notice);
 }
 
 async function translateMarkdown() {
@@ -403,6 +647,93 @@ async function translateMarkdown() {
   } finally {
     await loadServerConfig().catch(() => {
       els.translate.disabled = false;
+    });
+  }
+}
+
+async function editMarkdownWithPrompt() {
+  const instruction = els.llmEditPrompt.value.trim();
+  if (!instruction) {
+    setStatus("Enter an edit prompt");
+    return;
+  }
+
+  const selectionStart = els.editor.selectionStart;
+  const selectionEnd = els.editor.selectionEnd;
+  const hasSelection = selectionEnd > selectionStart;
+  const source = hasSelection
+    ? els.editor.value.slice(selectionStart, selectionEnd)
+    : els.editor.value;
+  if (!source.trim()) {
+    setStatus("Nothing to update");
+    return;
+  }
+
+  els.llmEditApply.disabled = true;
+  setStatus(hasSelection ? "Updating selected Markdown..." : "Updating document...");
+  try {
+    await streamMarkdownEdit({
+      source,
+      instruction,
+      selectionStart,
+      selectionEnd,
+      hasSelection,
+    });
+    updateStats();
+    await renderPreview();
+    setStatus("Updated");
+  } finally {
+    updateLlmEditButtonState();
+  }
+}
+
+async function streamMarkdownEdit({
+  source,
+  instruction,
+  selectionStart,
+  selectionEnd,
+  hasSelection,
+}) {
+  const response = await fetch("/api/edit/stream", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ content: source, instruction }),
+  });
+  if (!response.ok) {
+    throw new Error(await readApiError(response));
+  }
+  if (!response.body) {
+    const { content } = await apiJson("/api/edit", {
+      method: "POST",
+      body: JSON.stringify({ content: source, instruction }),
+    });
+    replaceTranslatedText({ content, selectionStart, selectionEnd, hasSelection });
+    return;
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let content = "";
+  let replaceEnd = hasSelection ? selectionEnd : els.editor.value.length;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    content += decoder.decode(value, { stream: true });
+    replaceEnd = replaceTranslatedText({
+      content,
+      selectionStart,
+      selectionEnd: replaceEnd,
+      hasSelection,
+    });
+    schedulePreview();
+  }
+  content += decoder.decode();
+  if (content) {
+    replaceTranslatedText({
+      content,
+      selectionStart,
+      selectionEnd: replaceEnd,
+      hasSelection,
     });
   }
 }
@@ -509,6 +840,19 @@ function connectWebsocket() {
   socket.onclose = () => setTimeout(connectWebsocket, 1000);
 }
 
+async function loadInitialFiles() {
+  await loadFiles();
+  const initialAbsolutePath = absolutePathFromUrl();
+  if (initialAbsolutePath) {
+    await openAbsoluteFile(initialAbsolutePath, { historyMode: "replace" });
+    return;
+  }
+  const initialPath = pathFromUrl();
+  if (initialPath) {
+    await openFile(initialPath, { historyMode: "replace" });
+  }
+}
+
 function escapeHtml(value) {
   return value
     .replaceAll("&", "&amp;")
@@ -521,12 +865,44 @@ els.filter.addEventListener("input", () => {
   state.filter = els.filter.value;
   renderFileList();
 });
+els.filter.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" || !isAbsolutePath(els.filter.value)) {
+    return;
+  }
+  event.preventDefault();
+  openAbsoluteFile(els.filter.value).catch((error) => setStatus(error.message));
+});
 els.editor.addEventListener("input", schedulePreview);
+els.llmEditPrompt.addEventListener("input", updateLlmEditButtonState);
+els.llmEditForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  editMarkdownWithPrompt().catch((error) => setStatus(error.message));
+});
+els.createFile.addEventListener("click", () => createFile().catch((error) => setStatus(error.message)));
+els.deleteFile.addEventListener("click", () =>
+  deleteSelectedTarget().catch((error) => setStatus(error.message)),
+);
 els.save.addEventListener("click", () => saveFile().catch((error) => setStatus(error.message)));
+els.shutdown.addEventListener("click", () => shutdownServer().catch((error) => setStatus(error.message)));
 els.translate.addEventListener("click", () => translateMarkdown().catch((error) => setStatus(error.message)));
 els.toggleSidebar.addEventListener("click", toggleSidebar);
 els.toggleEditor.addEventListener("click", toggleEditorPane);
 els.togglePreview.addEventListener("click", togglePreviewPane);
+window.addEventListener("popstate", () => {
+  const absolutePath = absolutePathFromUrl();
+  if (absolutePath) {
+    openAbsoluteFile(absolutePath, { historyMode: null }).catch((error) =>
+      setStatus(`Missing file: ${error.message}`),
+    );
+    return;
+  }
+  const path = pathFromUrl();
+  if (path) {
+    openFile(path, { historyMode: null }).catch((error) => setStatus(`Missing file: ${error.message}`));
+  } else {
+    clearActiveFile({ historyMode: null });
+  }
+});
 els.openThemeSettings.addEventListener("click", openThemeDialog);
 els.closeThemeSettings.addEventListener("click", closeThemeDialog);
 els.themeDialog.addEventListener("click", (event) => {
@@ -547,6 +923,7 @@ loadSidebarSettings();
 applySidebarSettings();
 loadPaneSettings();
 applyPaneSettings();
+updateDeleteButtonState();
 loadServerConfig().catch(() => setStatus("LLM translation config unavailable"));
-loadFiles().catch((error) => setStatus(error.message));
+loadInitialFiles().catch((error) => setStatus(error.message));
 connectWebsocket();

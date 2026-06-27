@@ -10,6 +10,15 @@ def test_render_markdown_sanitizes_script() -> None:
     assert "<script>" not in html
 
 
+def test_render_markdown_allows_safe_inline_html_hr() -> None:
+    html = render_markdown(
+        "<hr/> 本作品采用知识共享署名-非商业性使用-禁止演绎 4.0 国际许可协议进行许可。"
+    )
+
+    assert "<hr>" in html
+    assert "本作品采用知识共享" in html
+
+
 def test_render_markdown_keeps_normal_code_block() -> None:
     html = render_markdown("```python\nprint('hi')\n```")
 

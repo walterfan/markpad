@@ -91,7 +91,7 @@ def render_markdown(content: str) -> str:
         return match.group(0)
 
     content_with_tokens = FENCE_RE.sub(replace_diagram, content)
-    md = MarkdownIt("commonmark", {"html": False}).enable("table")
+    md = MarkdownIt("commonmark", {"html": True}).enable("table")
     rendered = md.render(content_with_tokens)
     cleaned = bleach.clean(
         rendered,

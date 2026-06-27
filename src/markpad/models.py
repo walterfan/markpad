@@ -17,6 +17,10 @@ class FileContent(BaseModel):
     mtime: float
 
 
+class AbsoluteFileContent(FileContent):
+    absolute: bool = True
+
+
 class RenderRequest(BaseModel):
     content: str
     path: str | None = None
@@ -40,6 +44,15 @@ class TranslateResponse(BaseModel):
     content: str
 
 
+class EditRequest(BaseModel):
+    content: str
+    instruction: str
+
+
+class EditResponse(BaseModel):
+    content: str
+
+
 class SaveRequest(BaseModel):
     path: str
     content: str
@@ -48,3 +61,19 @@ class SaveRequest(BaseModel):
 class SaveResponse(BaseModel):
     path: str
     mtime: float
+
+
+class CreateFileRequest(BaseModel):
+    directory: str = ""
+    name: str
+    content: str = ""
+
+
+class DeleteFileRequest(BaseModel):
+    path: str
+    type: str
+
+
+class DeleteFileResponse(BaseModel):
+    path: str
+    type: str

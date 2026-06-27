@@ -57,6 +57,10 @@ Use Poetry for development tasks:
 poetry install                 # install Python dependencies and the editable CLI.
 poetry run markpad --help      # smoke-test the CLI entry point.
 poetry run markpad             # start the local server with the current folder as root.
+poetry run markpad ./docs      # start the local server with an explicit folder as root.
+poetry run markpad -d          # start the server in the background; pairs with `markpad stop`.
+poetry run markpad stop        # stop a background server (also exposed as a Shutdown button in the UI).
+poetry run markpad status      # check whether a background server is running.
 poetry run ruff check .        # catch style and static-analysis drift before review.
 poetry run ruff format .       # keep Python and config diffs reviewable.
 poetry run pytest              # run unit and integration coverage for rendering, indexing, and live editing.

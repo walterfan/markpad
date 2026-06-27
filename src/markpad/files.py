@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 from pathlib import Path
 
 from .models import FileEntry
@@ -44,6 +45,38 @@ def resolve_markdown_path(root: Path, relative_path: str) -> Path:
     except ValueError as exc:
         raise PathOutsideRootError("Path escapes the content root.") from exc
 
+    return resolved
+
+
+def resolve_absolute_markdown_path(absolute_path: str) -> Path:
+    if not absolute_path:
+        raise ValueError("Absolute path is required.")
+
+    requested = Path(absolute_path).expanduser()
+    if not requested.is_absolute():
+        raise ValueError("Absolute path is required.")
+    if requested.suffix.lower() not in MARKDOWN_EXTENSIONS:
+        raise ValueError("Path must use a Markdown extension.")
+
+    resolved = requested.resolve(strict=True)
+    if not is_markdown_file(resolved):
+        raise FileNotFoundError(absolute_path)
+    return resolved
+
+
+def resolve_directory_path(root: Path, relative_path: str) -> Path:
+    requested = Path(relative_path or ".")
+    if requested.is_absolute():
+        raise PathOutsideRootError("Absolute paths are not allowed.")
+
+    resolved = (root / requested).resolve(strict=False)
+    try:
+        resolved.relative_to(root)
+    except ValueError as exc:
+        raise PathOutsideRootError("Path escapes the content root.") from exc
+
+    if resolved.exists() and not resolved.is_dir():
+        raise NotADirectoryError(relative_path)
     return resolved
 
 
@@ -96,6 +129,11 @@ def read_markdown(root: Path, relative_path: str) -> tuple[str, float]:
     return file_path.read_text(encoding="utf-8"), file_path.stat().st_mtime
 
 
+def read_absolute_markdown(absolute_path: str) -> tuple[str, float, str]:
+    file_path = resolve_absolute_markdown_path(absolute_path)
+    return file_path.read_text(encoding="utf-8"), file_path.stat().st_mtime, str(file_path)
+
+
 def save_markdown(root: Path, relative_path: str, content: str) -> float:
     file_path = resolve_markdown_path(root, relative_path)
     if file_path.suffix.lower() not in MARKDOWN_EXTENSIONS:
@@ -105,3 +143,66 @@ def save_markdown(root: Path, relative_path: str, content: str) -> float:
     tmp_path.write_text(content, encoding="utf-8")
     tmp_path.replace(file_path)
     return file_path.stat().st_mtime
+
+
+def save_absolute_markdown(absolute_path: str, content: str) -> tuple[float, str]:
+    file_path = resolve_absolute_markdown_path(absolute_path)
+    tmp_path = file_path.with_name(f".{file_path.name}.tmp")
+    tmp_path.write_text(content, encoding="utf-8")
+    tmp_path.replace(file_path)
+    return file_path.stat().st_mtime, str(file_path)
+
+
+def normalize_markdown_file_name(file_name: str) -> str:
+    normalized = file_name.strip()
+    if not normalized or normalized in {".", ".."}:
+        raise ValueError("File name is required.")
+    if "/" in normalized or "\\" in normalized:
+        raise ValueError("File name must not include directories.")
+
+    suffix = Path(normalized).suffix.lower()
+    if not suffix:
+        normalized = f"{normalized}.md"
+    elif suffix not in MARKDOWN_EXTENSIONS:
+        raise ValueError("File name must use a Markdown extension.")
+    return normalized
+
+
+def create_markdown(
+    root: Path,
+    directory: str,
+    file_name: str,
+    content: str = "",
+) -> tuple[str, float]:
+    directory_path = resolve_directory_path(root, directory)
+    if not directory_path.exists():
+        raise FileNotFoundError(directory or ".")
+
+    normalized_name = normalize_markdown_file_name(file_name)
+    relative_path = f"{directory.rstrip('/')}/{normalized_name}" if directory else normalized_name
+    file_path = resolve_markdown_path(root, relative_path)
+    if file_path.exists():
+        raise FileExistsError(relative_path)
+
+    file_path.write_text(content, encoding="utf-8")
+    return to_relative_posix(root, file_path), file_path.stat().st_mtime
+
+
+def delete_markdown_target(root: Path, target_type: str, relative_path: str) -> str:
+    if target_type == "file":
+        file_path = resolve_markdown_path(root, relative_path)
+        if not is_markdown_file(file_path):
+            raise FileNotFoundError(relative_path)
+        file_path.unlink()
+        return relative_path
+
+    if target_type == "folder":
+        if not relative_path.strip():
+            raise ValueError("Root folder cannot be deleted.")
+        directory_path = resolve_directory_path(root, relative_path)
+        if not directory_path.exists():
+            raise FileNotFoundError(relative_path)
+        shutil.rmtree(directory_path)
+        return to_relative_posix(root, directory_path)
+
+    raise ValueError("Delete target type must be file or folder.")

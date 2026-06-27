@@ -33,9 +33,26 @@ markpad
 You can also pass an explicit root folder:
 
 ```bash
+markpad /path/to/markdown
 markpad --root /path/to/markdown
 markpad serve /path/to/markdown
 ```
+
+You can open a specific Markdown file directly, including an absolute path. The browser
+URL keeps the file path, so sharing or reopening the URL shows the Markdown source pane
+and rendered HTML preview for that file:
+
+```bash
+markpad docs/guide.md --open
+# opens http://localhost:9526/docs/guide.md
+
+markpad /Users/me/notes/today.md --open
+# opens the file and displays its Markdown source beside the rendered HTML preview
+```
+
+In the web UI, the left search box can also open any absolute Markdown file path. Paste or
+type a path such as `/Users/me/notes/today.md`, press Enter, then edit and save it from the
+same source/preview view.
 
 By default the server listens on `127.0.0.1:9526`. If `9526` is occupied, it tries `9527`, `9528`, and so on. To force a port:
 
