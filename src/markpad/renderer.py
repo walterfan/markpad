@@ -4,6 +4,7 @@ import base64
 import html
 import os
 import re
+import shutil
 import subprocess
 from dataclasses import dataclass
 
@@ -106,12 +107,13 @@ def render_markdown(content: str) -> str:
 
 
 def render_plantuml_block(source: str) -> str:
-    command = os.environ.get("MARKPAD_PLANTUML_CMD") or os.environ.get("PLANTUML_CMD")
+    command = _plantuml_command()
     if not command:
         escaped = html.escape(source)
         return (
             '<figure class="diagram diagram-plantuml diagram-unavailable">'
-            "<figcaption>PlantUML renderer unavailable. Set MARKPAD_PLANTUML_CMD.</figcaption>"
+            "<figcaption>PlantUML renderer unavailable. Set MARKPAD_PLANTUML_CMD "
+            "or install PlantUML so `which plantuml` prints a command path.</figcaption>"
             f"<pre><code>{escaped}</code></pre>"
             "</figure>"
         )
@@ -137,6 +139,14 @@ def render_plantuml_block(source: str) -> str:
         '<figure class="diagram diagram-plantuml">'
         f'<img alt="PlantUML diagram" src="data:image/svg+xml;base64,{encoded}">'
         "</figure>"
+    )
+
+
+def _plantuml_command() -> str | None:
+    return (
+        os.environ.get("MARKPAD_PLANTUML_CMD")
+        or os.environ.get("PLANTUML_CMD")
+        or shutil.which("plantuml")
     )
 
 

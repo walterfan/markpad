@@ -448,6 +448,8 @@ def test_index_serves_tailwind_split_pane_ui(tmp_path: Path) -> None:
     assert "folder-button" in app_js.text
     assert "selectedDirectory" in app_js.text
     assert "deleteTarget" in app_js.text
+    assert "openFile(file.path).catch((error) => setStatus(error.message));" in app_js.text
+    assert "state.activePath = null;\n    state.activeAbsolutePath = file.path;" in app_js.text
 
     styles = client.get("/static/styles.css")
     assert styles.status_code == 200

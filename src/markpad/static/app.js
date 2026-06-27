@@ -404,7 +404,7 @@ function renderTreeNode(node, parent, currentPath) {
     `;
     button.addEventListener("click", () => {
       state.selectedDirectory = file.directory || "";
-      openFile(file.path);
+      openFile(file.path).catch((error) => setStatus(error.message));
     });
     fileRow.appendChild(button);
     parent.appendChild(fileRow);
@@ -529,7 +529,7 @@ async function openFile(path, { historyMode = "push" } = {}) {
 async function openAbsoluteFile(path, { historyMode = "push" } = {}) {
   try {
     const file = await apiJson(`/api/absolute-file?path=${encodeURIComponent(path.trim())}`);
-    state.activePath = file.path;
+    state.activePath = null;
     state.activeAbsolutePath = file.path;
     state.activeMtime = file.mtime;
     state.selectedDirectory = "";
@@ -567,7 +567,7 @@ function schedulePreview() {
 }
 
 async function saveFile() {
-  if (!state.activePath) {
+  if (!state.activePath && !state.activeAbsolutePath) {
     setStatus("Select a Markdown file before saving");
     return;
   }
@@ -577,8 +577,13 @@ async function saveFile() {
     method: "POST",
     body: JSON.stringify({ path, content: els.editor.value }),
   });
-  state.activePath = saved.path;
-  state.activeAbsolutePath = state.activeAbsolutePath ? saved.path : null;
+  if (state.activeAbsolutePath) {
+    state.activePath = null;
+    state.activeAbsolutePath = saved.path;
+  } else {
+    state.activePath = saved.path;
+    state.activeAbsolutePath = null;
+  }
   state.activeMtime = saved.mtime;
   setStatus("Saved");
   await loadFiles();
