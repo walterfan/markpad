@@ -15,6 +15,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from watchfiles import awatch
 
+from . import __version__
 from .files import (
     PathOutsideRootError,
     build_file_index,
@@ -39,6 +40,8 @@ from .models import (
     RenderResponse,
     SaveRequest,
     SaveResponse,
+    SummarizeRequest,
+    SummarizeResponse,
     TranslateRequest,
     TranslateResponse,
 )
@@ -54,7 +57,7 @@ def create_app(root: Path) -> FastAPI:
 
     @app.get("/", response_class=HTMLResponse)
     async def index() -> str:
-        return (static_dir / "index.html").read_text(encoding="utf-8")
+        return _render_index(static_dir)
 
     @app.get("/api/files")
     async def list_files() -> list[dict[str, object]]:
@@ -147,6 +150,21 @@ def create_app(root: Path) -> FastAPI:
         )
         return StreamingResponse(stream, media_type="text/plain; charset=utf-8")
 
+    @app.post("/api/summarize", response_model=SummarizeResponse)
+    async def summarize(request: SummarizeRequest) -> SummarizeResponse:
+        config = _llm_config(content_root)
+        if config is None:
+            raise HTTPException(
+                status_code=503,
+                detail="Summarization requires MP_LLM_BASE_URL, MP_LLM_MODEL, and MP_LLM_API_KEY.",
+            )
+        summary, mindmap = await summarize_with_llm(
+            config=config,
+            content=request.content,
+            target_language=request.target_language,
+        )
+        return SummarizeResponse(summary=summary, mindmap=mindmap)
+
     @app.post("/api/edit", response_model=EditResponse)
     async def edit(request: EditRequest) -> EditResponse:
         config = _llm_config(content_root)
@@ -222,9 +240,15 @@ def create_app(root: Path) -> FastAPI:
     async def markdown_deep_link(requested_path: str) -> str:
         if requested_path.startswith(("api/", "static/")):
             raise HTTPException(status_code=404, detail="Not found")
-        return (static_dir / "index.html").read_text(encoding="utf-8")
+        return _render_index(static_dir)
 
     return app
+
+
+def _render_index(static_dir: Path) -> str:
+    return (static_dir / "index.html").read_text(encoding="utf-8").replace(
+        "__MARKPAD_VERSION__", __version__
+    )
 
 
 def ensure_path_allowed(root: Path, relative_path: str) -> Path:
@@ -346,6 +370,98 @@ def _translation_payload(
     if stream:
         payload["stream"] = True
     return payload
+
+
+async def summarize_with_llm(
+    *,
+    config: dict[str, str],
+    content: str,
+    target_language: str,
+) -> tuple[str, str]:
+    payload = _summarize_payload(
+        model=config["model"],
+        content=content,
+        target_language=target_language,
+    )
+    headers = {
+        "Authorization": f"Bearer {config['api_key']}",
+        "x-api-key": config['api_key'],
+    }
+    try:
+        async with httpx.AsyncClient(timeout=60, verify=_llm_verify_ssl(config)) as client:
+            response = await client.post(
+                _chat_completions_url(config["base_url"]),
+                headers=headers,
+                json=payload,
+            )
+            response.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(status_code=502, detail=_llm_http_error_detail(exc)) from exc
+    except httpx.HTTPError as exc:
+        raise HTTPException(status_code=502, detail=f"LLM summarization failed: {exc}") from exc
+
+    data = response.json()
+    try:
+        raw = data["choices"][0]["message"]["content"]
+    except (KeyError, IndexError, TypeError) as exc:
+        raise HTTPException(
+            status_code=502,
+            detail="LLM summarization response was invalid.",
+        ) from exc
+    if not isinstance(raw, str):
+        raise HTTPException(status_code=502, detail="LLM summarization response was invalid.")
+    return _parse_summarize_response(raw)
+
+
+def _summarize_payload(*, model: str, content: str, target_language: str) -> dict[str, Any]:
+    return {
+        "model": model,
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    f"Summarize the given Markdown document in {target_language} and outline "
+                    "its structure as a Mermaid mindmap. Respond with ONLY a JSON object (no "
+                    "code fences, no extra text) with exactly two string keys: "
+                    f'"summary" — a detailed {target_language}-language summary covering the '
+                    "document's purpose, main sections, key points/arguments, and conclusion; "
+                    "use several paragraphs or bullet points, and make sure the content is "
+                    "thorough rather than overly brief; "
+                    '"mindmap" — valid Mermaid mindmap syntax, whose first line is exactly '
+                    "`mindmap`, followed by an indented root node derived from the document "
+                    f"title, with indented child nodes for its main sections and key points. "
+                    f"Node labels should be written in {target_language}. Keep node text free "
+                    "of special characters like parentheses, quotes, or colons."
+                ),
+            },
+            {
+                "role": "user",
+                "content": f"Markdown:\n{content}",
+            },
+        ],
+    }
+
+
+def _parse_summarize_response(raw: str) -> tuple[str, str]:
+    text = raw.strip()
+    if text.startswith("```"):
+        text = text.strip("`")
+        text = text.removeprefix("json").strip()
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail="LLM summarization response was not valid JSON.",
+        ) from exc
+    summary = data.get("summary")
+    mindmap = data.get("mindmap")
+    if not isinstance(summary, str) or not isinstance(mindmap, str):
+        raise HTTPException(
+            status_code=502,
+            detail="LLM summarization response was missing summary or mindmap.",
+        )
+    return summary, mindmap
 
 
 async def edit_markdown_with_llm(

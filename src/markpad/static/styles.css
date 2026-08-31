@@ -362,6 +362,21 @@ body {
   font-weight: 700;
 }
 
+.language-select {
+  background: var(--reader-panel-bg);
+  border: 1px solid var(--reader-border);
+  border-radius: 0.375rem;
+  color: var(--reader-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  height: 2rem;
+  padding: 0 0.5rem;
+}
+
+.language-select:hover {
+  background: var(--reader-active);
+}
+
 .settings-button {
   align-items: center;
   background: var(--reader-panel-bg);
@@ -550,6 +565,46 @@ body {
 
 .theme-swatch-dark {
   background: linear-gradient(135deg, #1f2937 0 50%, #0f766e 50% 100%);
+}
+
+.summary-dialog {
+  max-width: min(48rem, calc(100vw - 2rem));
+}
+
+.summary-dialog .settings-dialog-panel {
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+}
+
+.summary-text {
+  color: var(--reader-text);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  white-space: pre-wrap;
+}
+
+.summary-source {
+  margin-top: 1rem;
+}
+
+.summary-source summary {
+  color: var(--reader-muted);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.summary-source pre {
+  background: var(--reader-bg);
+  border: 1px solid var(--reader-border);
+  border-radius: 0.375rem;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  max-height: 16rem;
+  overflow: auto;
+  padding: 0.75rem;
+  white-space: pre-wrap;
 }
 
 .status-bar {

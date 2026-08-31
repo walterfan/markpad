@@ -13,6 +13,7 @@ const state = {
   previewHidden: false,
   llmAvailable: false,
   theme: "paper",
+  targetLanguage: "Chinese (Simplified)",
 };
 
 const themes = {
@@ -82,7 +83,14 @@ const els = {
   llmEditApply: document.getElementById("llm-edit-apply"),
   save: document.getElementById("save"),
   shutdown: document.getElementById("shutdown"),
+  languageSelect: document.getElementById("language-select"),
   translate: document.getElementById("translate"),
+  summarize: document.getElementById("summarize"),
+  summaryDialog: document.getElementById("summary-dialog"),
+  closeSummary: document.getElementById("close-summary"),
+  summaryText: document.getElementById("summary-text"),
+  summaryMindmap: document.getElementById("summary-mindmap"),
+  summaryMindmapSource: document.getElementById("summary-mindmap-source"),
   editorPane: document.getElementById("editor-pane"),
   previewPane: document.getElementById("preview-pane"),
   divider: document.getElementById("divider"),
@@ -204,16 +212,36 @@ function closeThemeDialog() {
   }
 }
 
+function loadLanguageSettings() {
+  const saved = localStorage.getItem("markpad.targetLanguage");
+  if (saved) {
+    state.targetLanguage = saved;
+  }
+}
+
+function applyLanguageSettings() {
+  els.languageSelect.value = state.targetLanguage;
+}
+
+function setTargetLanguage(language) {
+  state.targetLanguage = language;
+  localStorage.setItem("markpad.targetLanguage", state.targetLanguage);
+}
+
 function applyServerConfig(config) {
   state.llmAvailable = config.translate_available;
   if (config.translate_available) {
     els.translate.disabled = false;
     els.translate.title = `Translate selected text, or all Markdown if nothing is selected, with ${config.llm_model}`;
+    els.summarize.disabled = false;
+    els.summarize.title = `Summarize this Markdown file and generate a mindmap with ${config.llm_model}`;
     updateLlmEditButtonState();
     els.llmEditPrompt.title = `Update selected text, or all Markdown if nothing is selected, with ${config.llm_model}`;
   } else {
     els.translate.disabled = true;
     els.translate.title = "Set MP_LLM_BASE_URL, MP_LLM_MODEL, and MP_LLM_API_KEY to enable translation";
+    els.summarize.disabled = true;
+    els.summarize.title = "Set MP_LLM_BASE_URL, MP_LLM_MODEL, and MP_LLM_API_KEY to enable summarization";
     els.llmEditApply.disabled = true;
     els.llmEditPrompt.title = "Set MP_LLM_BASE_URL, MP_LLM_MODEL, and MP_LLM_API_KEY to enable LLM editing";
   }
@@ -656,6 +684,70 @@ async function translateMarkdown() {
   }
 }
 
+async function summarizeMarkdown() {
+  const source = els.editor.value;
+  if (!source.trim()) {
+    setStatus("Nothing to summarize");
+    return;
+  }
+
+  els.summarize.disabled = true;
+  setStatus("Summarizing document...");
+  try {
+    const { summary, mindmap } = await apiJson("/api/summarize", {
+      method: "POST",
+      body: JSON.stringify({ content: source, target_language: state.targetLanguage }),
+    });
+    showSummaryDialog(summary, mindmap);
+    setStatus("Summarized");
+  } finally {
+    await loadServerConfig().catch(() => {
+      els.summarize.disabled = false;
+    });
+  }
+}
+
+function showSummaryDialog(summary, mindmap) {
+  els.summaryText.textContent = summary;
+  els.summaryMindmapSource.textContent = mindmap;
+  const mermaidNode = els.summaryMindmap.querySelector(".mermaid");
+  mermaidNode.removeAttribute("data-processed");
+  mermaidNode.textContent = mindmap;
+  const errorEl = els.summaryMindmap.querySelector(".diagram-error");
+  errorEl.textContent = "";
+  errorEl.classList.add("hidden");
+  openSummaryDialog();
+  renderSummaryMindmap();
+}
+
+function renderSummaryMindmap() {
+  const mermaidNode = els.summaryMindmap.querySelector(".mermaid");
+  if (!window.mermaid) {
+    showMermaidError([els.summaryMindmap], "Mermaid renderer is unavailable");
+    return;
+  }
+  window.mermaid.initialize({ startOnLoad: false });
+  window.mermaid.run({ nodes: [mermaidNode] }).catch((error) => {
+    showMermaidError([els.summaryMindmap], error.message || "Mermaid rendering failed");
+  });
+}
+
+function openSummaryDialog() {
+  if (typeof els.summaryDialog.showModal === "function") {
+    els.summaryDialog.showModal();
+  } else {
+    els.summaryDialog.setAttribute("open", "");
+  }
+}
+
+function closeSummaryDialog() {
+  if (typeof els.summaryDialog.close === "function") {
+    els.summaryDialog.close();
+  } else {
+    els.summaryDialog.removeAttribute("open");
+  }
+}
+
 async function editMarkdownWithPrompt() {
   const instruction = els.llmEditPrompt.value.trim();
   if (!instruction) {
@@ -747,7 +839,7 @@ async function streamTranslation({ source, selectionStart, selectionEnd, hasSele
   const response = await fetch("/api/translate/stream", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ content: source, target_language: "Chinese" }),
+    body: JSON.stringify({ content: source, target_language: state.targetLanguage }),
   });
   if (!response.ok) {
     throw new Error(await readApiError(response));
@@ -755,7 +847,7 @@ async function streamTranslation({ source, selectionStart, selectionEnd, hasSele
   if (!response.body) {
     const { content } = await apiJson("/api/translate", {
       method: "POST",
-      body: JSON.stringify({ content: source, target_language: "Chinese" }),
+      body: JSON.stringify({ content: source, target_language: state.targetLanguage }),
     });
     replaceTranslatedText({ content, selectionStart, selectionEnd, hasSelection });
     return;
@@ -817,8 +909,8 @@ function initDivider() {
   });
 }
 
-function renderMermaid() {
-  const blocks = [...els.preview.querySelectorAll(".diagram-mermaid")];
+function renderMermaid(scope = els.preview) {
+  const blocks = [...scope.querySelectorAll(".diagram-mermaid")];
   if (!blocks.length) return;
   if (!window.mermaid) {
     showMermaidError(blocks, "Mermaid renderer is unavailable");
@@ -901,6 +993,16 @@ els.deleteFile.addEventListener("click", () =>
 els.save.addEventListener("click", () => saveFile().catch((error) => setStatus(error.message)));
 els.shutdown.addEventListener("click", () => shutdownServer().catch((error) => setStatus(error.message)));
 els.translate.addEventListener("click", () => translateMarkdown().catch((error) => setStatus(error.message)));
+els.summarize.addEventListener("click", () => summarizeMarkdown().catch((error) => setStatus(error.message)));
+els.closeSummary.addEventListener("click", closeSummaryDialog);
+els.summaryDialog.addEventListener("click", (event) => {
+  if (event.target === els.summaryDialog) {
+    closeSummaryDialog();
+  }
+});
+els.languageSelect.addEventListener("change", () => {
+  setTargetLanguage(els.languageSelect.value);
+});
 els.toggleSidebar.addEventListener("click", toggleSidebar);
 els.toggleEditor.addEventListener("click", toggleEditorPane);
 els.togglePreview.addEventListener("click", togglePreviewPane);
@@ -935,6 +1037,8 @@ for (const button of els.themeButtons) {
 initDivider();
 loadDisplaySettings();
 applyDisplaySettings();
+loadLanguageSettings();
+applyLanguageSettings();
 loadSidebarSettings();
 applySidebarSettings();
 loadPaneSettings();

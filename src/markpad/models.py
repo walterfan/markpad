@@ -44,6 +44,16 @@ class TranslateResponse(BaseModel):
     content: str
 
 
+class SummarizeRequest(BaseModel):
+    content: str
+    target_language: str = "Chinese (Simplified)"
+
+
+class SummarizeResponse(BaseModel):
+    summary: str
+    mindmap: str
+
+
 class EditRequest(BaseModel):
     content: str
     instruction: str
