@@ -460,13 +460,13 @@ def doctor(root: Path | None, output_format: str) -> None:
         + (
             f"enabled ({diagnostics['llm_model']}, {diagnostics['llm_config_source']})"
             if diagnostics["translate_available"]
-            else "disabled (set LLM_BASE_URL, LLM_MODEL, and LLM_API_KEY)"
+            else "disabled (set MP_LLM_BASE_URL, MP_LLM_MODEL, and MP_LLM_API_KEY)"
         )
     )
 
 
 def _llm_config_source(root: Path) -> str | None:
-    required = ("LLM_BASE_URL", "LLM_MODEL", "LLM_API_KEY")
+    required = ("MP_LLM_BASE_URL", "MP_LLM_MODEL", "MP_LLM_API_KEY")
     if all(os.environ.get(key) for key in required):
         return "environment"
     env_path = root / ".env"

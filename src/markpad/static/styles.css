@@ -596,6 +596,17 @@ body {
   padding: 1rem;
 }
 
+.diagram-mermaid .mermaid {
+  display: flex;
+  justify-content: center;
+  min-width: min-content;
+}
+
+.diagram-mermaid svg {
+  height: auto;
+  max-width: 100%;
+}
+
 .diagram-error,
 .diagram-unavailable {
   background: #fff7ed;

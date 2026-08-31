@@ -30,7 +30,7 @@ None. This repo has no accepted specs yet.
 
 ## Impact
 
-- Adds Python application source code, Poetry package metadata, install script, test configuration, and developer commands.
+- Adds Python application source code, uv package metadata, install script, test configuration, and developer commands.
 - Introduces HTTP routes or equivalent web app endpoints for the index, document content, rendered HTML, save operations, and live updates.
 - Introduces Markdown parsing/sanitization and diagram rendering dependencies.
 - Requires path traversal protections and local-only defaults because the tool reads and writes files from the user-selected folder.

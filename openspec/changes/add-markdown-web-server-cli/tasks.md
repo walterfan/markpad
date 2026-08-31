@@ -1,18 +1,18 @@
 ## 1. Project Scaffold
 
-- [x] 1.1 Create `pyproject.toml`, `poetry.lock`, pytest config, and source directory layout for CLI, server, shared models, templates, and static browser assets.
-- [x] 1.2 Add Poetry scripts and developer commands for `dev`, `test`, `lint`, `format`, and CLI execution.
+- [x] 1.1 Create `pyproject.toml`, `uv.lock`, pytest config, and source directory layout for CLI, server, shared models, templates, and static browser assets.
+- [x] 1.2 Add uv developer commands for `dev`, `test`, `lint`, `format`, and CLI execution.
 - [x] 1.3 Add Python dependencies for CLI parsing, HTTP server, websocket/live events, file watching, Markdown parsing, sanitization, diagram rendering integration, Tailwind asset handling, and testing.
 - [x] 1.4 Add a minimal `README.md` with install, run, and development command examples.
 - [x] 1.5 Update `AGENTS.md` with verified package manager and commands after scripts exist.
 
 ## 2. CLI Installation
 
-- [x] 2.1 Implement `install.sh` to check Python 3 and Poetry, install dependencies with `poetry install`, and link or install the CLI command.
+- [x] 2.1 Implement `install.sh` to check Python 3 and uv, install dependencies with `uv sync`, and link or install the CLI command.
 - [x] 2.2 Make `install.sh` print the installed command name and a smoke-test command such as `markpad --help`.
 - [x] 2.3 Add a CLI `--help` path that works after installation.
 - [x] 2.4 Verify the installed CLI can be run from a separate folder that contains Markdown files.
-- [x] 2.5 Add tests or scripted checks for install-script failure messages when Python, Poetry, or install steps fail.
+- [x] 2.5 Add tests or scripted checks for install-script failure messages when Python, uv, or install steps fail.
 
 ## 3. CLI And Server Runtime
 
@@ -57,8 +57,8 @@
 
 ## 7. Verification
 
-- [x] 7.1 Run `poetry run ruff check .` and fix reported issues.
-- [x] 7.2 Run `poetry run pytest` and ensure CLI, server, indexing, editing, and diagram tests pass.
-- [x] 7.3 Run the Poetry-installed CLI entry point and verify it starts from outside the repo.
+- [x] 7.1 Run `uv run ruff check .` and fix reported issues.
+- [x] 7.2 Run `uv run pytest` and ensure CLI, server, indexing, editing, and diagram tests pass.
+- [x] 7.3 Run the uv-installed CLI entry point and verify it starts from outside the repo.
 - [x] 7.4 Run `./install.sh`, then run the installed CLI from a sample Markdown folder.
 - [x] 7.5 Manually verify a browser session can index Markdown files, open a clicked file, edit in the left pane, render HTML in the right pane, hide either pane, resize pane widths, save edits, live-refresh preview, and display Mermaid and PlantUML diagrams.

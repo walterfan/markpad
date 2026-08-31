@@ -10,7 +10,7 @@
 
 ## 1. What This Project Is
 
-This repo implements a Poetry-managed Python CLI for a local Markdown web server. Keep it as a small developer tool that can:
+This repo implements a uv-managed Python CLI for a local Markdown web server. Keep it as a small developer tool that can:
 
 - Start a local web server from the current working directory, using port `9526` by default.
 - Discover and index `*.md` files recursively.
@@ -22,8 +22,8 @@ This repo implements a Poetry-managed Python CLI for a local Markdown web server
 Key facts:
 
 - **Language / runtime:** Python 3.11+
-- **Package manager:** Poetry (`pyproject.toml`, `poetry.lock`)
-- **Task runner:** Poetry commands
+- **Package manager:** uv (`pyproject.toml`, `uv.lock`)
+- **Task runner:** uv commands
 - **Primary entry point:** `markpad`
 
 ## 2. Repository Layout
@@ -51,19 +51,19 @@ Boundaries that matter:
 
 ## 3. Commands
 
-Use Poetry for development tasks:
+Use uv for development tasks:
 
 ```bash
-poetry install                 # install Python dependencies and the editable CLI.
-poetry run markpad --help      # smoke-test the CLI entry point.
-poetry run markpad             # start the local server with the current folder as root.
-poetry run markpad ./docs      # start the local server with an explicit folder as root.
-poetry run markpad -d          # start the server in the background; pairs with `markpad stop`.
-poetry run markpad stop        # stop a background server (also exposed as a Shutdown button in the UI).
-poetry run markpad status      # check whether a background server is running.
-poetry run ruff check .        # catch style and static-analysis drift before review.
-poetry run ruff format .       # keep Python and config diffs reviewable.
-poetry run pytest              # run unit and integration coverage for rendering, indexing, and live editing.
+uv sync                        # install Python dependencies and the editable CLI.
+uv run markpad --help          # smoke-test the CLI entry point.
+uv run markpad                 # start the local server with the current folder as root.
+uv run markpad ./docs          # start the server with an explicit folder as root.
+uv run markpad -d              # start the server in the background; pairs with `markpad stop`.
+uv run markpad stop             # stop a background server (also exposed as a Shutdown button).
+uv run markpad status           # check whether a background server is running.
+uv run ruff check .             # catch style and static-analysis drift before review.
+uv run ruff format .            # keep Python and config diffs reviewable.
+uv run pytest                   # run unit and integration coverage for rendering and indexing.
 ./install.sh                   # install the wrapper command at ~/.local/bin/markpad.
 ```
 
@@ -73,7 +73,7 @@ OpenSpec is available in this workspace:
 openspec --help                # inspect the local OpenSpec CLI before using it in scripts.
 ```
 
-The installed wrapper preserves the folder where `markpad` is invoked, then runs the Poetry-managed app from this repo.
+The installed wrapper preserves the folder where `markpad` is invoked, then runs the uv-managed app from this repo.
 
 ## 4. Implementation Conventions
 

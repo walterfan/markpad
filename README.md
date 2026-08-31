@@ -8,7 +8,7 @@
 ./install.sh
 ```
 
-The installer checks for Python 3.11+ and Poetry, builds the package, installs it
+The installer checks for Python 3.11+ and uv, builds the package, installs it
 into `~/.local/share/markpad/venv`, and links the `markpad` command into
 `~/.local/bin`. Verify installation with:
 
@@ -90,22 +90,24 @@ button is enabled when these settings are available from the shell environment o
 file in the folder where you run `markpad`:
 
 ```bash
-LLM_BASE_URL=https://api.example.com/v1
-LLM_MODEL=your-model
-LLM_API_KEY=your-api-key
+MP_LLM_BASE_URL=https://api.example.com/v1
+MP_LLM_MODEL=your-model
+MP_LLM_API_KEY=your-api-key
+# Set to false only when the LLM endpoint uses a trusted self-signed certificate.
+MP_LLM_VERIFY_SSL=false
 ```
 
-`LLM_BASE_URL` may point to an OpenAI-compatible API base URL such as `/v1`, or directly to
+`MP_LLM_BASE_URL` may point to an OpenAI-compatible API base URL such as `/v1`, or directly to
 `/chat/completions`.
 
 ## Development
 
 ```bash
-poetry install
-poetry run markpad --help
-poetry run ruff check .
-poetry run ruff format .
-poetry run pytest
+uv sync
+uv run markpad --help
+uv run ruff check .
+uv run ruff format .
+uv run pytest
 ```
 
 ## Diagrams

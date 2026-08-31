@@ -213,9 +213,9 @@ function applyServerConfig(config) {
     els.llmEditPrompt.title = `Update selected text, or all Markdown if nothing is selected, with ${config.llm_model}`;
   } else {
     els.translate.disabled = true;
-    els.translate.title = "Set LLM_BASE_URL, LLM_MODEL, and LLM_API_KEY to enable translation";
+    els.translate.title = "Set MP_LLM_BASE_URL, MP_LLM_MODEL, and MP_LLM_API_KEY to enable translation";
     els.llmEditApply.disabled = true;
-    els.llmEditPrompt.title = "Set LLM_BASE_URL, LLM_MODEL, and LLM_API_KEY to enable LLM editing";
+    els.llmEditPrompt.title = "Set MP_LLM_BASE_URL, MP_LLM_MODEL, and MP_LLM_API_KEY to enable LLM editing";
   }
 }
 
@@ -818,17 +818,28 @@ function initDivider() {
 }
 
 function renderMermaid() {
-  if (!window.mermaid) return;
+  const blocks = [...els.preview.querySelectorAll(".diagram-mermaid")];
+  if (!blocks.length) return;
+  if (!window.mermaid) {
+    showMermaidError(blocks, "Mermaid renderer is unavailable");
+    return;
+  }
   window.mermaid.initialize({ startOnLoad: false });
-  window.mermaid.run({ querySelector: ".mermaid" }).catch((error) => {
-    for (const block of document.querySelectorAll(".diagram-mermaid")) {
-      const errorEl = block.querySelector(".diagram-error");
-      if (errorEl) {
-        errorEl.textContent = error.message || "Mermaid rendering failed";
-        errorEl.classList.remove("hidden");
-      }
-    }
+  const nodes = blocks
+    .map((block) => block.querySelector(".mermaid"))
+    .filter((node) => node);
+  window.mermaid.run({ nodes }).catch((error) => {
+    showMermaidError(blocks, error.message || "Mermaid rendering failed");
   });
+}
+
+function showMermaidError(blocks, message) {
+  for (const block of blocks) {
+    const errorEl = block.querySelector(".diagram-error");
+    if (!errorEl) continue;
+    errorEl.textContent = message;
+    errorEl.classList.remove("hidden");
+  }
 }
 
 function connectWebsocket() {

@@ -57,28 +57,29 @@ if [[ -z "$PYTHON_BIN" ]]; then
   exit 1
 fi
 
-if ! command -v poetry >/dev/null 2>&1; then
-  err "Missing prerequisite: poetry"
-  warn "Install Poetry from https://python-poetry.org/docs/#installation"
+if ! command -v uv >/dev/null 2>&1; then
+  err "Missing prerequisite: uv"
+  warn "Install uv from https://docs.astral.sh/uv/getting-started/installation/"
   exit 1
 fi
 
 info "Using Python: ${PYTHON_BIN}"
+info "Using uv: $(command -v uv)"
 info "Using install venv: ${VENV_DIR}"
 
 mkdir -p "$INSTALL_DIR" "$BIN_DIR"
-"$PYTHON_BIN" -m venv "$VENV_DIR"
-"${VENV_DIR}/bin/python" -m pip install --upgrade pip
 
 cd "$SCRIPT_DIR"
-poetry build -f wheel
+uv sync
+uv build --wheel --out-dir "$SCRIPT_DIR/dist"
 WHEEL_PATH="$(find "$SCRIPT_DIR/dist" -maxdepth 1 -name 'markpad-*.whl' -print | sort | tail -n 1)"
 if [[ -z "$WHEEL_PATH" ]]; then
   err "Could not find built wheel under ${SCRIPT_DIR}/dist"
   exit 1
 fi
 
-"${VENV_DIR}/bin/python" -m pip install --force-reinstall "$WHEEL_PATH"
+uv venv "$VENV_DIR" --python "$PYTHON_BIN"
+uv pip install --python "${VENV_DIR}/bin/python" --force-reinstall "$WHEEL_PATH"
 
 cat > "$BIN_PATH" <<EOF
 #!/usr/bin/env bash

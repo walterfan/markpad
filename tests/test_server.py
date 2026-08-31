@@ -155,15 +155,15 @@ def test_api_rejects_invalid_absolute_markdown_paths(tmp_path: Path) -> None:
 
 
 def test_api_reports_translate_config_from_dotenv(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.delenv("LLM_BASE_URL", raising=False)
-    monkeypatch.delenv("LLM_MODEL", raising=False)
-    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    monkeypatch.delenv("MP_LLM_BASE_URL", raising=False)
+    monkeypatch.delenv("MP_LLM_MODEL", raising=False)
+    monkeypatch.delenv("MP_LLM_API_KEY", raising=False)
     (tmp_path / ".env").write_text(
         "\n".join(
             [
-                "LLM_BASE_URL=http://llm.example/v1",
-                "LLM_MODEL=test-model",
-                "LLM_API_KEY=test-key",
+                "MP_LLM_BASE_URL=http://llm.example/v1",
+                "MP_LLM_MODEL=test-model",
+                "MP_LLM_API_KEY=test-key",
             ]
         ),
         encoding="utf-8",
@@ -176,10 +176,17 @@ def test_api_reports_translate_config_from_dotenv(tmp_path: Path, monkeypatch) -
     assert response.json() == {"translate_available": True, "llm_model": "test-model"}
 
 
+def test_llm_verify_ssl_accepts_false_values() -> None:
+    assert server._llm_verify_ssl({"verify_ssl": "false"}) is False
+    assert server._llm_verify_ssl({"verify_ssl": "0"}) is False
+    assert server._llm_verify_ssl({"verify_ssl": "true"}) is True
+    assert server._llm_verify_ssl({}) is True
+
+
 def test_api_rejects_translate_without_llm_config(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.delenv("LLM_BASE_URL", raising=False)
-    monkeypatch.delenv("LLM_MODEL", raising=False)
-    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    monkeypatch.delenv("MP_LLM_BASE_URL", raising=False)
+    monkeypatch.delenv("MP_LLM_MODEL", raising=False)
+    monkeypatch.delenv("MP_LLM_API_KEY", raising=False)
     client = TestClient(create_app(tmp_path))
 
     response = client.post("/api/translate", json={"content": "Hello"})
@@ -195,9 +202,9 @@ def test_api_translates_with_llm_config(tmp_path: Path, monkeypatch) -> None:
         assert target_language == "Chinese"
         return f"translated: {content}"
 
-    monkeypatch.setenv("LLM_BASE_URL", "http://llm.example/v1")
-    monkeypatch.setenv("LLM_MODEL", "test-model")
-    monkeypatch.setenv("LLM_API_KEY", "test-key")
+    monkeypatch.setenv("MP_LLM_BASE_URL", "http://llm.example/v1")
+    monkeypatch.setenv("MP_LLM_MODEL", "test-model")
+    monkeypatch.setenv("MP_LLM_API_KEY", "test-key")
     monkeypatch.setattr(server, "translate_with_llm", fake_translate_with_llm)
     client = TestClient(create_app(tmp_path))
 
@@ -220,9 +227,9 @@ def test_api_streams_translation_with_llm_config(tmp_path: Path, monkeypatch) ->
         assert content == "# Hello"
         return fake_stream()
 
-    monkeypatch.setenv("LLM_BASE_URL", "http://llm.example/v1")
-    monkeypatch.setenv("LLM_MODEL", "test-model")
-    monkeypatch.setenv("LLM_API_KEY", "test-key")
+    monkeypatch.setenv("MP_LLM_BASE_URL", "http://llm.example/v1")
+    monkeypatch.setenv("MP_LLM_MODEL", "test-model")
+    monkeypatch.setenv("MP_LLM_API_KEY", "test-key")
     monkeypatch.setattr(server, "stream_translation_with_llm", fake_stream_translation_with_llm)
     client = TestClient(create_app(tmp_path))
 
@@ -240,9 +247,9 @@ def test_api_edits_markdown_with_llm_config(tmp_path: Path, monkeypatch) -> None
         assert instruction == "make it shorter"
         return f"edited: {content}"
 
-    monkeypatch.setenv("LLM_BASE_URL", "http://llm.example/v1")
-    monkeypatch.setenv("LLM_MODEL", "test-model")
-    monkeypatch.setenv("LLM_API_KEY", "test-key")
+    monkeypatch.setenv("MP_LLM_BASE_URL", "http://llm.example/v1")
+    monkeypatch.setenv("MP_LLM_MODEL", "test-model")
+    monkeypatch.setenv("MP_LLM_API_KEY", "test-key")
     monkeypatch.setattr(server, "edit_markdown_with_llm", fake_edit_markdown_with_llm)
     client = TestClient(create_app(tmp_path))
 
@@ -268,9 +275,9 @@ def test_api_streams_markdown_edit_with_llm_config(tmp_path: Path, monkeypatch) 
         assert instruction == "make it shorter"
         return fake_stream()
 
-    monkeypatch.setenv("LLM_BASE_URL", "http://llm.example/v1")
-    monkeypatch.setenv("LLM_MODEL", "test-model")
-    monkeypatch.setenv("LLM_API_KEY", "test-key")
+    monkeypatch.setenv("MP_LLM_BASE_URL", "http://llm.example/v1")
+    monkeypatch.setenv("MP_LLM_MODEL", "test-model")
+    monkeypatch.setenv("MP_LLM_API_KEY", "test-key")
     monkeypatch.setattr(server, "stream_edit_markdown_with_llm", fake_stream_edit_markdown_with_llm)
     client = TestClient(create_app(tmp_path))
 
@@ -284,9 +291,9 @@ def test_api_streams_markdown_edit_with_llm_config(tmp_path: Path, monkeypatch) 
 
 
 def test_api_rejects_markdown_edit_without_llm_config(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.delenv("LLM_BASE_URL", raising=False)
-    monkeypatch.delenv("LLM_MODEL", raising=False)
-    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    monkeypatch.delenv("MP_LLM_BASE_URL", raising=False)
+    monkeypatch.delenv("MP_LLM_MODEL", raising=False)
+    monkeypatch.delenv("MP_LLM_API_KEY", raising=False)
     client = TestClient(create_app(tmp_path))
 
     response = client.post("/api/edit", json={"content": "# Hello", "instruction": "shorten"})
@@ -376,6 +383,7 @@ def test_index_serves_tailwind_split_pane_ui(tmp_path: Path) -> None:
     assert "app-title-main" in response.text
     assert "app-title-meta" in response.text
     assert "cdn.tailwindcss.com" in response.text
+    assert 'src="/static/vendor/mermaid.min.js"' in response.text
     assert "Author: Walter Fan" in response.text
     assert "Copyright 2026 Walter Fan" in response.text
     assert "status-attribution" in response.text
@@ -450,6 +458,12 @@ def test_index_serves_tailwind_split_pane_ui(tmp_path: Path) -> None:
     assert "deleteTarget" in app_js.text
     assert "openFile(file.path).catch((error) => setStatus(error.message));" in app_js.text
     assert "state.activePath = null;\n    state.activeAbsolutePath = file.path;" in app_js.text
+    assert "renderMermaid" in app_js.text
+    assert "showMermaidError" in app_js.text
+
+    mermaid = client.get("/static/vendor/mermaid.min.js")
+    assert mermaid.status_code == 200
+    assert "mermaid" in mermaid.text[:1000]
 
     styles = client.get("/static/styles.css")
     assert styles.status_code == 200
@@ -467,5 +481,6 @@ def test_index_serves_tailwind_split_pane_ui(tmp_path: Path) -> None:
     assert ".llm-edit-form" in styles.text
     assert ".llm-edit-input" in styles.text
     assert ".llm-edit-button" in styles.text
+    assert ".diagram-mermaid svg" in styles.text
     assert ".target-checkbox" in styles.text
     assert ".folder-button.active" in styles.text

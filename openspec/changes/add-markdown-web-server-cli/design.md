@@ -2,7 +2,7 @@
 
 The repo is currently a scaffold with OpenSpec files and no application implementation. The requested product is a local developer tool: install a CLI with a shell script, run that CLI in a folder, open a browser to an index page, browse Markdown files recursively, edit a selected file in a left Markdown pane, and see rendered HTML update live in a right preview pane. Markdown may contain Mermaid or PlantUML code blocks, and those blocks must render as diagrams rather than plain code.
 
-The design must protect local files because the server reads and writes from the user's working tree. It must use Poetry to manage Python dependencies and avoid a large custom framework because the first implementation should be small enough to verify end to end.
+The design must protect local files because the server reads and writes from the user's working tree. It must use uv to manage Python dependencies and avoid a large custom framework because the first implementation should be small enough to verify end to end.
 
 ## Goals / Non-Goals
 
@@ -14,7 +14,7 @@ The design must protect local files because the server reads and writes from the
 - Render Markdown to sanitized HTML and support live editing/preview.
 - Provide a Tailwind-styled split-pane UI where the Markdown source pane and HTML preview pane can be hidden or resized.
 - Render Mermaid and PlantUML code blocks into visual diagrams.
-- Manage Python dependencies, scripts, and packaging through Poetry.
+- Manage Python dependencies, scripts, and packaging through uv.
 - Keep the stack conventional and testable for future packaging.
 
 **Non-Goals:**
@@ -26,11 +26,11 @@ The design must protect local files because the server reads and writes from the
 
 ## Decisions
 
-### Use Python, Poetry, FastAPI, Tailwind CSS, and a lightweight browser UI
+### Use Python, uv, FastAPI, Tailwind CSS, and a lightweight browser UI
 
-Use a Poetry-managed Python package with a FastAPI server and lightweight browser UI:
+Use a uv-managed Python package with a FastAPI server and lightweight browser UI:
 
-- `pyproject.toml` and `poetry.lock` for dependency and script management.
+- `pyproject.toml` and `uv.lock` for dependency and script management.
 - `typer` or `click` for the CLI.
 - `fastapi` and `uvicorn` for HTTP routes, static files, and websocket/live events.
 - `watchfiles` or `watchdog` for file watching.
@@ -39,13 +39,13 @@ Use a Poetry-managed Python package with a FastAPI server and lightweight browse
 - Tailwind CSS for the browser UI styling.
 - Plain HTML/JavaScript for the first browser UI behavior, served by FastAPI static/template routes.
 
-Rationale: Poetry gives a reproducible Python environment and an installable CLI, while FastAPI provides explicit route contracts, websocket support, and straightforward testing. Tailwind keeps the split-pane UI consistent without a large component framework.
+Rationale: uv gives a reproducible Python environment and an installable CLI, while FastAPI provides explicit route contracts, websocket support, and straightforward testing. Tailwind keeps the split-pane UI consistent without a large component framework.
 
 Alternatives considered:
 
 - Python + Streamlit: fastest to prototype, but weaker for custom split-pane editing, route contracts, and filesystem save semantics.
-- Python + FastAPI + Vue: viable later, but introduces npm/Vite alongside Poetry for the first implementation.
-- TypeScript + Node + Vue: strong browser tooling, but conflicts with the requested Poetry-managed Python dependency model.
+- Python + FastAPI + Vue: viable later, but introduces npm/Vite alongside uv for the first implementation.
+- TypeScript + Node + Vue: strong browser tooling, but conflicts with the requested uv-managed Python dependency model.
 
 ### Use port 9026 with incremental fallback
 
@@ -55,13 +55,13 @@ Rationale: the default port is predictable, while automatic fallback avoids star
 
 ### Provide an install shell script for local CLI setup
 
-Add `install.sh` at the repo root. The script checks for Python 3 and Poetry, runs `poetry install`, and links or installs the CLI command into a user-writable location. It must print the installed command name and a smoke-test command such as `markpad --help`.
+Add `install.sh` at the repo root. The script checks for Python 3 and uv, runs `uv sync`, and links or installs the CLI command into a user-writable location. It must print the installed command name and a smoke-test command such as `markpad --help`.
 
-Rationale: the user wants to run the tool from any folder containing Markdown files without remembering project-internal Poetry commands.
+Rationale: the user wants to run the tool from any folder containing Markdown files without remembering project-internal uv commands.
 
 Alternatives considered:
 
-- Documenting `poetry run markpad`: useful for contributors but does not satisfy installed CLI usage from arbitrary folders.
+- Documenting `uv run markpad`: useful for contributors but does not satisfy installed CLI usage from arbitrary folders.
 - Publishing directly to PyPI first: useful later, but unnecessary for local iteration.
 
 ### Serve localhost by default and require explicit opt-in for external binding
@@ -107,14 +107,14 @@ Rationale: the index makes navigation obvious, while a resizable split view supp
 
 ## Migration Plan
 
-1. Scaffold the Poetry Python package, CLI entry point, FastAPI server, tests, and static browser UI.
+1. Scaffold the uv Python package, CLI entry point, FastAPI server, tests, and static browser UI.
 2. Add `install.sh` and verify the installed CLI can run `--help` from outside the repo.
 3. Implement port selection, root resolution, Markdown indexing, and read-only preview routes.
 4. Add editor save behavior and live file watcher events.
 5. Add Mermaid rendering and PlantUML rendering with tests for success and failure cases.
-6. Update `AGENTS.md` with verified Poetry commands and Python version.
+6. Update `AGENTS.md` with verified uv commands and Python version.
 
-Rollback is straightforward during initial development: remove the Poetry package scaffold or disable diagram rendering behind feature flags if renderer dependencies block the base server.
+Rollback is straightforward during initial development: remove the uv package scaffold or disable diagram rendering behind feature flags if renderer dependencies block the base server.
 
 ## Open Questions
 

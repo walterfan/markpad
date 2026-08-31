@@ -29,10 +29,10 @@ The install shell script SHALL fail with clear guidance when required tools or s
 - **WHEN** the install shell script runs without a required Python 3 runtime available
 - **THEN** it exits with a non-zero status and prints the missing prerequisite
 
-#### Scenario: Missing Poetry
-- **WHEN** the install shell script runs without Poetry available
+#### Scenario: Missing uv
+- **WHEN** the install shell script runs without uv available
 - **THEN** it exits with a non-zero status and prints the missing prerequisite
 
 #### Scenario: Build failure
-- **WHEN** Poetry dependency installation or package installation fails
+- **WHEN** uv dependency installation or package installation fails
 - **THEN** the install shell script exits with a non-zero status and preserves the failing command output

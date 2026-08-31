@@ -1,13 +1,13 @@
 ---
 name: markpad-cli
-description: Use when the user wants to install, run, debug, publish, or extend markpad, a Poetry-managed Python CLI for serving local Markdown files with indexing, live editing, preview, Mermaid rendering, and LLM translation.
+description: Use when the user wants to install, run, debug, publish, or extend markpad, a uv-managed Python CLI for serving local Markdown files with indexing, live editing, preview, Mermaid rendering, and LLM translation.
 version: 1.0.0
 repository: https://github.com/walterfan/markpad
 tags:
   - markdown
   - cli
   - fastapi
-  - poetry
+  - uv
   - llm-translation
 ---
 
@@ -26,19 +26,19 @@ Invoke this skill when the user asks to:
 
 ## Project Shape
 
-`markpad` is a Python 3.11+ Poetry project. It serves Markdown files from a local root directory, renders HTML previews, supports live editing, watches file changes, renders Mermaid diagrams, and can translate Markdown through an OpenAI-compatible LLM gateway.
+`markpad` is a Python 3.11+ uv project. It serves Markdown files from a local root directory, renders HTML previews, supports live editing, watches file changes, renders Mermaid diagrams, and can translate Markdown through an OpenAI-compatible LLM gateway.
 
 ## Common Commands
 
 Run commands from the repository root:
 
 ```bash
-poetry install
-poetry run markpad --help
-poetry run markpad
-poetry run markpad --root /path/to/notes --port 9526
-poetry run pytest
-poetry run ruff check .
+uv sync
+uv run markpad --help
+uv run markpad
+uv run markpad --root /path/to/notes --port 9526
+uv run pytest
+uv run ruff check .
 ./install.sh
 ```
 
@@ -49,9 +49,10 @@ The installed wrapper exposes `markpad` from `~/.local/bin/markpad` and preserve
 - Default host: `127.0.0.1`
 - Default port: `9526`, with automatic fallback when unavailable
 - Default content root: current working directory, unless `--root` or `MARKPAD_DEFAULT_ROOT` is set
-- LLM translation requires `LLM_BASE_URL`, `LLM_MODEL`, and `LLM_API_KEY` from the shell environment or a `.env` file in the served root
+- LLM translation requires `MP_LLM_BASE_URL`, `MP_LLM_MODEL`, and `MP_LLM_API_KEY` from the shell environment or a `.env` file in the served root
+- Set `MP_LLM_VERIFY_SSL=false` to disable TLS certificate verification for the LLM endpoint when required
 
-`LLM_BASE_URL` may point to an OpenAI-compatible `/v1` base URL or directly to `/chat/completions`.
+`MP_LLM_BASE_URL` may point to an OpenAI-compatible `/v1` base URL or directly to `/chat/completions`.
 
 ## Implementation Guardrails
 
@@ -67,8 +68,8 @@ The installed wrapper exposes `markpad` from `~/.local/bin/markpad` and preserve
 Before claiming a code change works, run the focused tests for the touched area and prefer a full verification pass:
 
 ```bash
-poetry run pytest
-poetry run ruff check .
+uv run pytest
+uv run ruff check .
 ```
 
-If dependencies are missing, run `poetry install` first.
+If dependencies are missing, run `uv sync` first.

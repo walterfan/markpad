@@ -104,9 +104,9 @@ def test_cli_background_flag_propagates(tmp_path, monkeypatch) -> None:
 
 
 def test_doctor_reports_runtime_config_without_llm(tmp_path, monkeypatch) -> None:
-    monkeypatch.delenv("LLM_BASE_URL", raising=False)
-    monkeypatch.delenv("LLM_MODEL", raising=False)
-    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    monkeypatch.delenv("MP_LLM_BASE_URL", raising=False)
+    monkeypatch.delenv("MP_LLM_MODEL", raising=False)
+    monkeypatch.delenv("MP_LLM_API_KEY", raising=False)
 
     result = CliRunner().invoke(main, ["doctor", str(tmp_path), "--format", "json"])
 
@@ -119,15 +119,15 @@ def test_doctor_reports_runtime_config_without_llm(tmp_path, monkeypatch) -> Non
 
 
 def test_doctor_reports_dotenv_llm_config(tmp_path, monkeypatch) -> None:
-    monkeypatch.delenv("LLM_BASE_URL", raising=False)
-    monkeypatch.delenv("LLM_MODEL", raising=False)
-    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    monkeypatch.delenv("MP_LLM_BASE_URL", raising=False)
+    monkeypatch.delenv("MP_LLM_MODEL", raising=False)
+    monkeypatch.delenv("MP_LLM_API_KEY", raising=False)
     (tmp_path / ".env").write_text(
         "\n".join(
             [
-                "LLM_BASE_URL=http://llm.example/v1",
-                "LLM_MODEL=test-model",
-                "LLM_API_KEY=test-key",
+                "MP_LLM_BASE_URL=http://llm.example/v1",
+                "MP_LLM_MODEL=test-model",
+                "MP_LLM_API_KEY=test-key",
             ]
         ),
         encoding="utf-8",

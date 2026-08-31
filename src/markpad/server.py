@@ -123,7 +123,7 @@ def create_app(root: Path) -> FastAPI:
         if config is None:
             raise HTTPException(
                 status_code=503,
-                detail="Translation requires LLM_BASE_URL, LLM_MODEL, and LLM_API_KEY.",
+                detail="Translation requires MP_LLM_BASE_URL, MP_LLM_MODEL, and MP_LLM_API_KEY.",
             )
         content = await translate_with_llm(
             config=config,
@@ -138,7 +138,7 @@ def create_app(root: Path) -> FastAPI:
         if config is None:
             raise HTTPException(
                 status_code=503,
-                detail="Translation requires LLM_BASE_URL, LLM_MODEL, and LLM_API_KEY.",
+                detail="Translation requires MP_LLM_BASE_URL, MP_LLM_MODEL, and MP_LLM_API_KEY.",
             )
         stream = await stream_translation_with_llm(
             config=config,
@@ -153,7 +153,7 @@ def create_app(root: Path) -> FastAPI:
         if config is None:
             raise HTTPException(
                 status_code=503,
-                detail="LLM editing requires LLM_BASE_URL, LLM_MODEL, and LLM_API_KEY.",
+                detail="LLM editing requires MP_LLM_BASE_URL, MP_LLM_MODEL, and MP_LLM_API_KEY.",
             )
         content = await edit_markdown_with_llm(
             config=config,
@@ -168,7 +168,7 @@ def create_app(root: Path) -> FastAPI:
         if config is None:
             raise HTTPException(
                 status_code=503,
-                detail="LLM editing requires LLM_BASE_URL, LLM_MODEL, and LLM_API_KEY.",
+                detail="LLM editing requires MP_LLM_BASE_URL, MP_LLM_MODEL, and MP_LLM_API_KEY.",
             )
         stream = await stream_edit_markdown_with_llm(
             config=config,
@@ -240,9 +240,11 @@ def _trigger_shutdown() -> None:
 def _llm_config(root: Path) -> dict[str, str] | None:
     env_file = _read_dotenv(root / ".env")
     config = {
-        "base_url": os.environ.get("LLM_BASE_URL") or env_file.get("LLM_BASE_URL", ""),
-        "model": os.environ.get("LLM_MODEL") or env_file.get("LLM_MODEL", ""),
-        "api_key": os.environ.get("LLM_API_KEY") or env_file.get("LLM_API_KEY", ""),
+        "base_url": os.environ.get("MP_LLM_BASE_URL") or env_file.get("MP_LLM_BASE_URL", ""),
+        "model": os.environ.get("MP_LLM_MODEL") or env_file.get("MP_LLM_MODEL", ""),
+        "api_key": os.environ.get("MP_LLM_API_KEY") or env_file.get("MP_LLM_API_KEY", ""),
+        "verify_ssl": os.environ.get("MP_LLM_VERIFY_SSL")
+        or env_file.get("MP_LLM_VERIFY_SSL", "true"),
     }
     if all(config.values()):
         return config
@@ -272,6 +274,10 @@ def _chat_completions_url(base_url: str) -> str:
     return f"{normalized}/chat/completions"
 
 
+def _llm_verify_ssl(config: dict[str, str]) -> bool:
+    return config.get("verify_ssl", "true").strip().lower() not in {"0", "false", "no", "off"}
+
+
 async def translate_with_llm(
     *,
     config: dict[str, str],
@@ -283,9 +289,12 @@ async def translate_with_llm(
         content=content,
         target_language=target_language,
     )
-    headers = {"Authorization": f"Bearer {config['api_key']}"}
+    headers = {
+        "Authorization": f"Bearer {config['api_key']}",
+        "x-api-key": config['api_key'],
+    }
     try:
-        async with httpx.AsyncClient(timeout=60) as client:
+        async with httpx.AsyncClient(timeout=60, verify=_llm_verify_ssl(config)) as client:
             response = await client.post(
                 _chat_completions_url(config["base_url"]),
                 headers=headers,
@@ -350,9 +359,12 @@ async def edit_markdown_with_llm(
         content=content,
         instruction=instruction,
     )
-    headers = {"Authorization": f"Bearer {config['api_key']}"}
+    headers = {
+        "Authorization": f"Bearer {config['api_key']}",
+        "x-api-key": config['api_key'],
+    }
     try:
-        async with httpx.AsyncClient(timeout=60) as client:
+        async with httpx.AsyncClient(timeout=60, verify=_llm_verify_ssl(config)) as client:
             response = await client.post(
                 _chat_completions_url(config["base_url"]),
                 headers=headers,
@@ -419,8 +431,11 @@ async def stream_edit_markdown_with_llm(
         instruction=instruction,
         stream=True,
     )
-    headers = {"Authorization": f"Bearer {config['api_key']}"}
-    client = httpx.AsyncClient(timeout=60)
+    headers = {
+        "Authorization": f"Bearer {config['api_key']}",
+        "x-api-key": config['api_key'],
+    }
+    client = httpx.AsyncClient(timeout=60, verify=_llm_verify_ssl(config))
     try:
         request = client.build_request(
             "POST",
@@ -452,8 +467,11 @@ async def stream_translation_with_llm(
         target_language=target_language,
         stream=True,
     )
-    headers = {"Authorization": f"Bearer {config['api_key']}"}
-    client = httpx.AsyncClient(timeout=60)
+    headers = {
+        "Authorization": f"Bearer {config['api_key']}",
+        "x-api-key": config['api_key'],
+    }
+    client = httpx.AsyncClient(timeout=60, verify=_llm_verify_ssl(config))
     try:
         request = client.build_request(
             "POST",
