@@ -1,0 +1,20 @@
+README.md
+  s_e66c4f526cfe81::t_fb24ecb736dec8 7-24,26-27,31-32,44-45
+  s_e66c4f526cfe81::t_4ff6483dda86e6 46
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "70b15982a78cff96a2251ff1eb9c13de4707faa0",
+  "prompts": {},
+  "sessions": {
+    "s_e66c4f526cfe81": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "32d9157e-e4d6-4ee5-bec6-b3788e679c62",
+        "model": "auto-smart"
+      },
+      "human_author": "Walter Fan <walter.fan@zoom.us>"
+    }
+  }
+}
