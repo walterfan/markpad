@@ -1,0 +1,45 @@
+src/markpad/static/index.html
+  s_a86f363a927e38::t_998c2b91b9f867 8
+  s_a86f363a927e38::t_6591678776c5e6 212
+src/markpad/server.py
+  s_a86f363a927e38::t_6591678776c5e6 249-251,253-256,258
+  s_a86f363a927e38::t_998c2b91b9f867 252
+tests/test_server.py
+  s_a86f363a927e38::t_6591678776c5e6 424,426
+  s_dbfc646ba4610d::t_dbf3d2fa9770aa 423,425
+  s_a86f363a927e38::t_998c2b91b9f867 422
+  s_a86f363a927e38::t_1edb5fb298432f 473-477
+  s_dbfc646ba4610d::t_0854444314a7af 485-488
+  s_a86f363a927e38::t_c2bbce896d65d5 489
+  s_dbfc646ba4610d::t_d11dc511dd9c37 490-495
+tests/test_renderer.py
+  s_dbfc646ba4610d::t_d9efd497f99dc7 10-17
+src/markpad/static/styles.css
+  s_dbfc646ba4610d::t_cb2f15af7b437e 385-445
+  s_dbfc646ba4610d::t_b53926f4bee7d3 352-358,360-362,368-384
+  s_a86f363a927e38::t_c2bbce896d65d5 359,363-367
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "b60c543a554c446e35b12f03383e079ee2d9b253",
+  "prompts": {},
+  "sessions": {
+    "s_a86f363a927e38": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0a7e5-6e9e-71f2-8605-fe4629f38a48",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Walter Fan <walter.fan@zoom.us>"
+    },
+    "s_dbfc646ba4610d": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "b0da2924-308e-4eef-a798-d75d02c6f572",
+        "model": "auto-smart"
+      },
+      "human_author": "Walter Fan <walter.fan@zoom.us>"
+    }
+  }
+}
