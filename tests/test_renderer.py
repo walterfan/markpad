@@ -7,6 +7,14 @@ from pytest import MonkeyPatch
 from markpad.renderer import render_markdown
 
 
+def test_render_markdown_renders_dash_lists_as_ul() -> None:
+    html = render_markdown("- title 1\n- title 2\n")
+
+    assert "<ul>" in html
+    assert "<li>title 1</li>" in html
+    assert "<li>title 2</li>" in html
+
+
 def test_render_markdown_sanitizes_script() -> None:
     html = render_markdown("# Title\n\n<script>alert(1)</script>")
 

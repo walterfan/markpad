@@ -349,6 +349,100 @@ body {
   margin-top: 0;
 }
 
+#preview ul,
+#preview ol {
+  margin: 0.75em 0;
+  padding-left: 1.6em;
+}
+
+#preview ul {
+  list-style: disc outside;
+}
+
+#preview ol {
+  list-style: decimal outside;
+}
+
+#preview li::marker {
+  color: var(--reader-text);
+}
+
+#preview li {
+  margin: 0.25em 0;
+}
+
+#preview ul ul,
+#preview ol ul {
+  list-style: circle;
+}
+
+#preview ul ul ul,
+#preview ol ul ul,
+#preview ul ol ul {
+  list-style: square;
+}
+
+#preview p {
+  margin: 0.85em 0;
+}
+
+#preview > p:first-child {
+  margin-top: 0;
+}
+
+#preview a {
+  color: var(--reader-text);
+  text-decoration: underline;
+  text-decoration-color: var(--reader-border);
+  text-underline-offset: 0.18em;
+}
+
+#preview a:hover {
+  color: var(--reader-muted);
+}
+
+#preview blockquote {
+  border-left: 4px solid var(--reader-border);
+  color: var(--reader-muted);
+  margin: 1em 0;
+  padding: 0.15em 0 0.15em 1em;
+}
+
+#preview hr {
+  border: 0;
+  border-top: 1px solid var(--reader-border);
+  margin: 1.5em 0;
+}
+
+#preview img {
+  height: auto;
+  margin: 1em 0;
+  max-width: 100%;
+}
+
+#preview code {
+  background: color-mix(in srgb, var(--reader-hover) 70%, var(--reader-panel-bg));
+  border-radius: 0.25rem;
+  font-size: 0.9em;
+  padding: 0.12em 0.35em;
+}
+
+#preview pre {
+  background: color-mix(in srgb, var(--reader-hover) 55%, var(--reader-panel-bg));
+  border: 1px solid var(--reader-border);
+  border-radius: 0.375rem;
+  margin: 1em 0;
+  overflow-x: auto;
+  padding: 0.85em 1em;
+}
+
+#preview pre code {
+  background: transparent;
+  display: block;
+  font-size: 0.85em;
+  padding: 0;
+}
+
 .theme-button {
   border: 1px solid var(--reader-border);
   border-radius: 0.375rem;

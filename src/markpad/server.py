@@ -246,8 +246,16 @@ def create_app(root: Path) -> FastAPI:
 
 
 def _render_index(static_dir: Path) -> str:
+    asset_version = "-".join(
+        [
+            __version__,
+            str((static_dir / "github-markdown.min.css").stat().st_mtime_ns),
+            str((static_dir / "styles.css").stat().st_mtime_ns),
+            str((static_dir / "app.js").stat().st_mtime_ns),
+        ]
+    )
     return (static_dir / "index.html").read_text(encoding="utf-8").replace(
-        "__MARKPAD_VERSION__", __version__
+        "__MARKPAD_VERSION__", asset_version
     )
 
 

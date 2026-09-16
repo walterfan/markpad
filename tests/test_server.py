@@ -419,6 +419,11 @@ def test_index_serves_tailwind_split_pane_ui(tmp_path: Path) -> None:
     assert "llm-edit-prompt" in response.text
     assert "Prompt to update selected text or the full document" in response.text
     assert "preview-pane" in response.text
+    assert 'href="/static/github-markdown.min.css?v=1.0.0-' in response.text
+    assert 'id="preview"' in response.text
+    assert 'class="markdown-body' in response.text
+    assert 'class="prose' not in response.text
+    assert "styles.css?v=1.0.0-" in response.text
     assert "overflow-y-auto" in response.text
     assert "min-h-0 min-w-0 flex-col" in response.text
     assert "divider" in response.text
@@ -465,6 +470,11 @@ def test_index_serves_tailwind_split_pane_ui(tmp_path: Path) -> None:
     assert mermaid.status_code == 200
     assert "mermaid" in mermaid.text[:1000]
 
+    github_styles = client.get("/static/github-markdown.min.css")
+    assert github_styles.status_code == 200
+    assert ".markdown-body" in github_styles.text
+    assert ".markdown-body ol,.markdown-body ul" in github_styles.text
+
     styles = client.get("/static/styles.css")
     assert styles.status_code == 200
     assert "overflow-y: scroll" in styles.text
@@ -472,6 +482,17 @@ def test_index_serves_tailwind_split_pane_ui(tmp_path: Path) -> None:
     assert "#preview::-webkit-scrollbar" in styles.text
     assert "#preview h1" in styles.text
     assert "#preview h6" in styles.text
+    assert "#preview ul" in styles.text
+    assert "#preview ol" in styles.text
+    assert "list-style: disc" in styles.text
+    assert "list-style: decimal" in styles.text
+    assert "#preview li::marker" in styles.text
+    assert "#preview p" in styles.text
+    assert "#preview a" in styles.text
+    assert "#preview blockquote" in styles.text
+    assert "#preview hr" in styles.text
+    assert "#preview img" in styles.text
+    assert "text-decoration: underline" in styles.text
     assert "font-size: 2.1em" in styles.text
     assert "font-weight: 700" in styles.text
     assert ".settings-dialog" in styles.text
