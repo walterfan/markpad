@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+<head>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<section class="pane min-w-[18rem] flex-col" style="height:400px;width:400px">
+<article id="preview" class="min-h-0 flex-1 max-w-none overflow-y-auto bg-white p-6">
+<ul>
+<li><strong>Responsibilities</strong>: APR/memory pools,</li>
+</ul>
+</article>
+</section>
+<script>
+setTimeout(() => {
+  const li = document.querySelector("#preview li");
+  const ul = document.querySelector("#preview ul");
+  const preview = document.getElementById("preview");
+  const sli = getComputedStyle(li);
+  const sul = getComputedStyle(ul);
+  const marker = getComputedStyle(li, "::marker");
+  const rect = li.getBoundingClientRect();
+  const prect = preview.getBoundingClientRect();
+  document.documentElement.setAttribute("data-debug", JSON.stringify({
+    ulList: sul.listStyleType,
+    ulPad: sul.paddingLeft,
+    ulOverflow: sul.overflow,
+    previewOverflow: getComputedStyle(preview).overflow,
+    previewOverflowX: getComputedStyle(preview).overflowX,
+    previewOverflowY: getComputedStyle(preview).overflowY,
+    liDisplay: sli.display,
+    liList: sli.listStyleType,
+    liPosition: sli.listStylePosition,
+    markerContent: marker.content,
+    markerColor: marker.color,
+    liOverflowWrap: sli.overflowWrap,
+    liLeft: rect.left,
+    previewLeft: prect.left,
+    previewPaddingLeft: getComputedStyle(preview).paddingLeft,
+  }));
+}, 2000);
+</script>
+</body>
+</html>
