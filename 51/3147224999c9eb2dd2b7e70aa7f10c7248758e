@@ -1,0 +1,52 @@
+src/markpad/renderer.py
+  s_5ff07f30a469e4::t_b433ac239b575b 6,11,69,98-110
+README.zh-CN.md
+  s_5ff07f30a469e4::t_276d0fcfa2b1ef 3-4
+  s_5ff07f30a469e4::t_8c4420955f45b0 134-135
+  s_5ff07f30a469e4::t_c5f8e4a4730167 1-2,5-133,136
+README.md
+  s_5ff07f30a469e4::t_276d0fcfa2b1ef 3-4
+  s_5ff07f30a469e4::t_8c4420955f45b0 147-149
+  s_5ff07f30a469e4::t_b10161c6110288 144-145
+  s_5ff07f30a469e4::t_98f2c38a824fd6 146,150
+tests/test_server.py
+  s_5ff07f30a469e4::t_6a26fbb9d99a7a 6,13-19,24-45
+  s_5ff07f30a469e4::t_766382219e42fd 20-23
+  s_5ff07f30a469e4::t_b375daefec62f3 46-47
+example/demo.md
+  s_5ff07f30a469e4::t_a4e2aa9a24c112 1-100,102-105
+  s_749e4d2b0fbe2f::t_971f79b6cbb673 101
+src/markpad/server.py
+  s_5ff07f30a469e4::t_766382219e42fd 137-141,145-151
+  s_5ff07f30a469e4::t_b433ac239b575b 14,121-136,142-144
+tests/test_renderer.py
+  s_5ff07f30a469e4::t_6a26fbb9d99a7a 10-14
+AGENTS.md
+  s_5ff07f30a469e4::t_8c4420955f45b0 50
+src/markpad/static/app.js
+  s_5ff07f30a469e4::t_b433ac239b575b 583
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "513147224999c9eb2dd2b7e70aa7f10c7248758e",
+  "prompts": {},
+  "sessions": {
+    "s_5ff07f30a469e4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1d281-e282-7592-bda4-75b8abcd2d8e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Walter Fan <walter.fan@zoom.us>"
+    },
+    "s_749e4d2b0fbe2f": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e2d85f93bffezS9n9eoX8Um38n",
+        "model": "deepseek_v4_flash"
+      },
+      "human_author": "Walter Fan <walter.fan@zoom.us>"
+    }
+  }
+}
