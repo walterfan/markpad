@@ -580,7 +580,7 @@ async function openAbsoluteFile(path, { historyMode = "push" } = {}) {
 async function renderPreview() {
   const { html } = await apiJson("/api/render", {
     method: "POST",
-    body: JSON.stringify({ path: state.activePath, content: els.editor.value }),
+    body: JSON.stringify({ path: state.activeAbsolutePath || state.activePath, content: els.editor.value }),
   });
   els.preview.innerHTML = html;
   renderMermaid();

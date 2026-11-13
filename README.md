@@ -1,5 +1,7 @@
 # markpad
 
+[English](README.md) | [简体中文](README.zh-CN.md)
+
 `markpad` is a local Markdown editor/reader/translator on the web. Run it in a folder containing Markdown files to get an index page, a left-side Markdown editor, and a right-side HTML preview.
 
 ## Install
@@ -139,3 +141,10 @@ Mermaid fenced blocks render in the browser. PlantUML fenced blocks render when 
 ```bash
 export MARKPAD_PLANTUML_CMD=plantuml
 ```
+
+See [example/demo.md](example/demo.md) for a rendered Markdown and Mermaid demo.
+
+Local Markdown image links resolve relative to the Markdown file. Images must be
+inside the selected server root, including when opening Markdown by absolute path.
+
+![Rendered Markpad demo](example/snapshot.png)

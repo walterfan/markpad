@@ -7,6 +7,11 @@ from pytest import MonkeyPatch
 from markpad.renderer import render_markdown
 
 
+def test_remote_images_keep_their_urls() -> None:
+    html = render_markdown("![Demo](https://example.com/image.png)", image_base="docs")
+    assert 'src="https://example.com/image.png"' in html
+
+
 def test_render_markdown_renders_dash_lists_as_ul() -> None:
     html = render_markdown("- title 1\n- title 2\n")
 

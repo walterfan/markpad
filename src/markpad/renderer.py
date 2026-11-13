@@ -3,10 +3,12 @@ from __future__ import annotations
 import base64
 import html
 import os
+import posixpath
 import re
 import shutil
 import subprocess
 from dataclasses import dataclass
+from urllib.parse import quote, unquote, urlsplit
 
 import bleach
 from markdown_it import MarkdownIt
@@ -64,7 +66,7 @@ class DiagramPlaceholder:
     html: str
 
 
-def render_markdown(content: str) -> str:
+def render_markdown(content: str, image_base: str = "") -> str:
     placeholders: list[DiagramPlaceholder] = []
 
     def replace_diagram(match: re.Match[str]) -> str:
@@ -93,6 +95,19 @@ def render_markdown(content: str) -> str:
 
     content_with_tokens = FENCE_RE.sub(replace_diagram, content)
     md = MarkdownIt("commonmark", {"html": True}).enable("table")
+    default_image = md.renderer.rules["image"]
+
+    def render_image(tokens, idx, options, env):
+        token = tokens[idx]
+        source = token.attrGet("src") or ""
+        url = urlsplit(source)
+        if url.path and not url.scheme and not url.netloc:
+            path = unquote(url.path)
+            path = posixpath.normpath(posixpath.join(image_base, path))
+            token.attrSet("src", f"/api/image?path={quote(path, safe='')}")
+        return default_image(tokens, idx, options, env)
+
+    md.renderer.rules["image"] = render_image
     rendered = md.render(content_with_tokens)
     cleaned = bleach.clean(
         rendered,

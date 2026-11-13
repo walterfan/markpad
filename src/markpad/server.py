@@ -11,7 +11,7 @@ from typing import Any
 
 import httpx
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from watchfiles import awatch
 
@@ -118,7 +118,37 @@ def create_app(root: Path) -> FastAPI:
 
     @app.post("/api/render", response_model=RenderResponse)
     async def render(request: RenderRequest) -> RenderResponse:
-        return RenderResponse(html=render_markdown(request.content))
+        image_base = ""
+        if request.path:
+            document = Path(request.path)
+            if not document.is_absolute():
+                document = content_root / document
+            try:
+                image_base = document.resolve().parent.relative_to(content_root).as_posix()
+            except ValueError:
+                # External Markdown files cannot expose files outside the selected root.
+                image_base = "../"
+        return RenderResponse(html=render_markdown(request.content, image_base=image_base))
+
+    @app.get("/api/image")
+    async def get_image(path: str) -> FileResponse:
+        try:
+            image = resolve_markdown_path(content_root, path)
+            if (
+                image.suffix.lower()
+                not in {".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif", ".bmp", ".ico", ".svg"}
+                or not image.is_file()
+            ):
+                raise HTTPException(status_code=404, detail="Image not found")
+        except (ValueError, OSError) as exc:
+            raise HTTPException(status_code=404, detail="Image not found") from exc
+        return FileResponse(
+            image,
+            headers={
+                "X-Content-Type-Options": "nosniff",
+                "Content-Security-Policy": "sandbox; default-src 'none'; style-src 'unsafe-inline'",
+            },
+        )
 
     @app.post("/api/translate", response_model=TranslateResponse)
     async def translate(request: TranslateRequest) -> TranslateResponse:

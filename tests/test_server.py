@@ -3,10 +3,46 @@ from __future__ import annotations
 from pathlib import Path
 
 import httpx
+import pytest
 from fastapi.testclient import TestClient
 
 import markpad.server as server
 from markpad.server import create_app
+
+
+def test_local_image_preview_and_delivery(tmp_path: Path) -> None:
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "demo").mkdir()
+    image = tmp_path / "demo" / "screen shot.png"
+    image.write_bytes(b"\x89PNG\r\n\x1a\n")
+    client = TestClient(create_app(tmp_path))
+    for path in ("docs/note.md", str(tmp_path / "docs" / "note.md")):
+        response = client.post(
+            "/api/render", json={"path": path, "content": "![Demo](../demo/screen%20shot.png)"}
+        )
+        assert "/api/image?path=demo%2Fscreen%20shot.png" in response.json()["html"]
+    response = client.get("/api/image", params={"path": "demo/screen shot.png"})
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "image/png"
+    assert response.content == image.read_bytes()
+    assert response.headers["x-content-type-options"] == "nosniff"
+
+
+@pytest.mark.parametrize("path", ["../outside.png", "/etc/passwd", "note.md", "missing.png"])
+def test_local_images_reject_invalid_paths(tmp_path: Path, path: str) -> None:
+    (tmp_path / "note.md").write_text("private", encoding="utf-8")
+    client = TestClient(create_app(tmp_path))
+    assert client.get("/api/image", params={"path": path}).status_code == 404
+
+
+def test_local_images_reject_external_symlink(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    root.mkdir()
+    outside = tmp_path / "outside.png"
+    outside.write_bytes(b"private")
+    (root / "link.png").symlink_to(outside)
+    client = TestClient(create_app(root))
+    assert client.get("/api/image", params={"path": "link.png"}).status_code == 404
 
 
 def test_api_lists_opens_renders_and_saves_markdown(tmp_path: Path) -> None:

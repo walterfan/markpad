@@ -47,6 +47,7 @@ Boundaries that matter:
 - **Public surface:** the future CLI flags, HTTP routes, file index JSON shape, rendered HTML contract, and editor behavior; breaking these surprises users and should be captured in a spec.
 - **Internal modules:** markdown parsing, file watching, search/indexing, HTML templating, and live-reload transport; refactor freely once tests cover behavior.
 - **Danger zones:** file writes and path traversal handling; mistakes can overwrite user files or expose files outside the served root, so require tests and a design note before changing them.
+- **Local images:** `/api/image` serves allowlisted image files within the selected root. Markdown image paths resolve relative to the document directory; see `openspec/changes/serve-local-images/design.md` for access boundaries.
 - **Danger zones:** live editing and websocket/event-stream behavior; race conditions can drop edits or render stale content, so add integration coverage before changing the protocol.
 
 ## 3. Commands
