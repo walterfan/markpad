@@ -4,6 +4,9 @@
 
 `markpad` 是一个本地 Markdown 编辑器、阅读器和翻译工具。可在包含 Markdown 文件的目录中运行，浏览文件、编辑 Markdown，并实时查看 HTML 预览。
 
+![Markpad Demo 渲染截图](example/snapshot.png)
+
+
 ## 安装
 
 需要 **Python 3.11+** 和 [uv](https://docs.astral.sh/uv/getting-started/installation/)。
@@ -133,4 +136,3 @@ export MARKPAD_PLANTUML_CMD=plantuml
 
 本地 Markdown 图片链接按 Markdown 文件所在目录解析。图片必须位于服务所选的根目录内，包括通过绝对路径打开 Markdown 文件时。
 
-![Markpad Demo 渲染截图](example/snapshot.png)

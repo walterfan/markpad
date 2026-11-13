@@ -4,6 +4,9 @@
 
 `markpad` is a local Markdown editor/reader/translator on the web. Run it in a folder containing Markdown files to get an index page, a left-side Markdown editor, and a right-side HTML preview.
 
+![Rendered Markpad demo](example/snapshot.png)
+
+
 ## Install
 
 Prerequisites: **Python 3.11+** and [uv](https://docs.astral.sh/uv/getting-started/installation/).
@@ -147,4 +150,3 @@ See [example/demo.md](example/demo.md) for a rendered Markdown and Mermaid demo.
 Local Markdown image links resolve relative to the Markdown file. Images must be
 inside the selected server root, including when opening Markdown by absolute path.
 
-![Rendered Markpad demo](example/snapshot.png)
